@@ -6,18 +6,20 @@ Create a Codex skill that lets a capable orchestration model delegate long,
 decomposable work to Google Antigravity through the `agy` CLI while retaining
 responsibility for scope, review, correction, and final verification.
 
-The skill is intended for Codex sessions using `gpt-5.6-sol` or
-`gpt-6-astra`. It should activate only when the task has multiple meaningful,
-independently verifiable steps. Small edits and short questions remain with the
-main model.
+The skill is optimized for Codex sessions using `gpt-5.6-sol` or
+`gpt-6-astra`. The user must explicitly ask to use Antigravity/AGY or directly
+invoke `$agy-orchestrator`, after which the task must still have multiple
+meaningful, independently verifiable steps. Small edits and short questions
+remain with the main model.
 
 ## Deliverables
 
-The skill will live at `agy-orchestrator/` and contain:
+The skill will live at `skills/agy-orchestrator/` and contain:
 
 - `SKILL.md`: activation criteria and the orchestration workflow.
-- `agents/openai.yaml`: discoverable UI metadata with implicit invocation
-  enabled.
+- `agents/openai.yaml`: discoverable UI metadata with normal discovery enabled;
+  the explicit-intent and complexity predicates in the description prevent
+  accidental activation.
 - `references/model-routing.md`: the current model inventory, model-specific
   task routing, and runtime refresh rules.
 - `references/orchestration-protocol.md`: AGY command patterns, response
@@ -32,17 +34,20 @@ script from treating syntactic success as task success.
 
 Use the skill when all of the following are true:
 
-1. The current main Codex model identifies itself as `gpt-5.6-sol` or
-   `gpt-6-astra`.
+1. The user explicitly asks to use Antigravity/AGY in the prompt or directly
+   invokes `$agy-orchestrator`.
 2. The task can be divided into at least two meaningful steps with explicit
    acceptance checks.
 3. Delegation will reduce execution cost or latency without weakening review.
 4. The requested work is within the current task's existing scope and
    permissions.
 
-Do not activate solely because a task mentions Antigravity, Gemini, or AGY.
-Do not delegate trivial changes, ambiguous work that first needs user input, or
-work where the main model cannot inspect the result.
+`gpt-5.6-sol` and `gpt-6-astra` are the preferred orchestrator models, not hard
+activation requirements. Enter activation checks only when the user expresses
+an intent to use Antigravity/AGY or directly invokes the skill. Product
+discussion, documentation questions, and model-name mentions are not execution
+intent. Keep trivial changes, ambiguous work that first needs user input, and
+work whose result the main model cannot inspect with the main model.
 
 ## Runtime Discovery and Model Routing
 
@@ -220,4 +225,3 @@ The completed skill will be checked in four ways:
   https://docs.anthropic.com/en/docs/about-claude/models
 - OpenAI GPT-OSS 120B model page:
   https://developers.openai.com/api/docs/models/gpt-oss-120b
-

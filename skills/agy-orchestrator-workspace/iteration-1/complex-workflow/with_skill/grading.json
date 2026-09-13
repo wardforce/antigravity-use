@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "选择工作模型前明确运行 agy models 获取实时模型列表", "passed": true, "evidence": "第 25 行要求每次新调用前运行 agy models 并只使用实时 slug。"},
+    {"text": "按数据库、后端、前端、端到端验证的依赖顺序串行执行", "passed": true, "evidence": "方案明确四阶段严格串行。"},
+    {"text": "每一步都包含主模型亲自检查 diff 和测试的验收门", "passed": true, "evidence": "每个阶段都定义主模型验收门，并要求亲自运行测试。"},
+    {"text": "明确保留用户已有未提交改动", "passed": true, "evidence": "基线章节将用户改动标记为受保护内容。"},
+    {"text": "保存 conversation_id，以便审查失败后在同一 AGY 会话返工", "passed": true, "evidence": "调用协议保存 conversation_id，返工章节使用原会话。"}
+  ],
+  "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}
+}

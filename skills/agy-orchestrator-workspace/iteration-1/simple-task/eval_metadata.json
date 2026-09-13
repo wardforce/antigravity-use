@@ -1,0 +1,10 @@
+{
+  "eval_id": 2,
+  "eval_name": "simple-task",
+  "prompt": "请使用 agy-orchestrator，把 README 里的一个错别字改掉。只输出执行方案，不实际修改文件。",
+  "assertions": [
+    "把任务判断为不满足至少两个可验收步骤的复杂度门槛",
+    "明确由主模型直接完成",
+    "方案中不调用 agy"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "expectations": [
+    {"text": "把任务判断为不满足至少两个可验收步骤的复杂度门槛", "passed": true, "evidence": "编排判断明确指出这是单文件、单处替换的一步任务。"},
+    {"text": "明确由主模型直接完成", "passed": true, "evidence": "明确路由为主模型本地一步执行。"},
+    {"text": "方案中不调用 agy", "passed": true, "evidence": "明确不启动 AGY 委派。"}
+  ],
+  "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}
+}

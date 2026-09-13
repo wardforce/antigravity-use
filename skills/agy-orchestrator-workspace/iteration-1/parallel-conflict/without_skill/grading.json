@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "识别共享配置和上下游依赖并拒绝并行执行", "passed": true, "evidence": "开头识别共享配置与契约依赖，限定实际写入严格串行。"},
+    {"text": "给出配置、后端、前端的串行顺序", "passed": true, "evidence": "明确采用配置到后端再到前端的顺序。"},
+    {"text": "每一步声明允许写入范围和验收条件", "passed": true, "evidence": "三个步骤均列出文件范围与验收条件。"},
+    {"text": "审查失败时使用同一个 conversation_id 返工", "passed": true, "evidence": "AGY 调用与会话管理部分给出 --conversation 返工命令。"},
+    {"text": "同一缺陷最多返工两轮，之后由主模型接管", "passed": true, "evidence": "返工规则明确两轮上限及主模型接管。"}
+  ],
+  "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}
+}

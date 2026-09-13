@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "agy-orchestrator", "runs": [{"id": "complex-workflow-with_skill", "prompt": "\u4f60\u6b63\u5728\u4f7f\u7528\u9ad8\u9636 Codex \u6a21\u578b\u3002\u4e00\u4e2a\u73b0\u6709 Web \u9879\u76ee\u9700\u8981\u4f9d\u6b21\u5b8c\u6210\u6570\u636e\u5e93\u5b57\u6bb5\u8fc1\u79fb\u3001\u540e\u7aef\u63a5\u53e3\u9002\u914d\u3001\u524d\u7aef\u8868\u5355\u66f4\u65b0\u548c\u7aef\u5230\u7aef\u9a8c\u8bc1\u3002\u8bf7\u53ea\u8f93\u51fa\u4f60\u5c06\u5982\u4f55\u4f7f\u7528 agy \u7f16\u6392\u8fd9\u9879\u4efb\u52a1\u7684\u6267\u884c\u65b9\u6848\uff0c\u4e0d\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u3002\u9879\u76ee\u91cc\u5df2\u6709\u7528\u6237\u672a\u63d0\u4ea4\u6539\u52a8\u3002", "eval_id": 1, "outputs": [{"name": "result.md", "type": "text", "content": "# \u4f7f\u7528 AGY \u7f16\u6392\u6570\u636e\u5e93\u2014\u540e\u7aef\u2014\u524d\u7aef\u2014\u7aef\u5230\u7aef\u5de5\u4f5c\u6d41\u7684\u6267\u884c\u65b9\u6848\n\n## 1. \u7f16\u6392\u7b56\u7565\u4e0e\u5b8c\u6210\u6807\u51c6\n\n\u7531\u9ad8\u9636 Codex \u4e3b\u6a21\u578b\u62c5\u4efb\u7f16\u6392\u8005\uff1a\u8d1f\u8d23\u8bfb\u53d6\u4ed3\u5e93\u7ea6\u675f\u3001\u4fdd\u62a4\u7528\u6237\u5df2\u6709\u6539\u52a8\u3001\u62c6\u5206\u6b65\u9aa4\u3001\u51bb\u7ed3\u8de8\u5c42\u5951\u7ea6\u3001\u68c0\u67e5\u6bcf\u4e2a\u771f\u5b9e diff\u3001\u4eb2\u81ea\u8fd0\u884c\u9a8c\u6536\u547d\u4ee4\u5e76\u7ed9\u51fa\u6700\u7ec8\u7ed3\u8bba\u3002AGY \u53ea\u6267\u884c\u8fb9\u754c\u6e05\u695a\u7684\u6b65\u9aa4\uff0cAGY \u7684\u9000\u51fa\u7801\u3001`status: SUCCESS` \u6216\u6587\u5b57\u603b\u7ed3\u5747\u4e0d\u89c6\u4e3a\u5b8c\u6210\u8bc1\u636e\u3002\n\n\u6574\u4e2a\u6d41\u7a0b\u91c7\u7528\u4e25\u683c\u4e32\u884c\uff1a\u6570\u636e\u5e93\u5b57\u6bb5\u51b3\u5b9a\u540e\u7aef\u6301\u4e45\u5316\u4e0e API \u5951\u7ea6\uff0cAPI \u5951\u7ea6\u51b3\u5b9a\u524d\u7aef\u5b57\u6bb5\u4e0e\u4ea4\u4e92\uff0c\u4e09\u5c42\u5b8c\u6210\u540e\u624d\u80fd\u505a\u7aef\u5230\u7aef\u9a8c\u8bc1\u3002\u4efb\u4f55\u4e00\u6b65\u672a\u901a\u8fc7\uff0c\u90fd\u505c\u7559\u5728\u8be5\u6b65\u9aa4\u8fd4\u5de5\uff0c\u4e0d\u8ba9\u4e0b\u6e38\u57fa\u4e8e\u672a\u9a8c\u6536\u7684\u5951\u7ea6\u7ee7\u7eed\u3002\n\n\u5b8c\u6210\u6761\u4ef6\u662f\uff1a\u56db\u4e2a\u9636\u6bb5\u5404\u81ea\u9a8c\u6536\u901a\u8fc7\uff1b\u5b8c\u6574 diff \u53ea\u5305\u542b\u6279\u51c6\u8303\u56f4\u5185\u7684\u65b0\u589e\u6539\u52a8\uff1b\u7528\u6237\u539f\u6709\u672a\u63d0\u4ea4\u6539\u52a8\u9010\u9879\u4fdd\u6301\uff1b\u8fc1\u79fb\u53ef\u6b63\u5411\u6267\u884c\u4e14\u6309\u9879\u76ee\u7b56\u7565\u9a8c\u8bc1\u56de\u6eda\u6216\u517c\u5bb9\u6027\uff1b\u540e\u7aef\u63a5\u53e3\u6d4b\u8bd5\u3001\u524d\u7aef\u7c7b\u578b\u68c0\u67e5\u548c\u7ec4\u4ef6\u6d4b\u8bd5\u3001\u6700\u7ec8\u7aef\u5230\u7aef\u573a\u666f\u5168\u90e8\u901a\u8fc7\u3002\n\n## 2. \u6267\u884c\u524d\uff1a\u5efa\u7acb\u4e0d\u53ef\u4e22\u5931\u7684\u57fa\u7ebf\n\n\u4e3b\u6a21\u578b\u5148\u8bfb\u53d6\u4ed3\u5e93\u5185\u5168\u90e8\u9002\u7528\u6307\u4ee4\uff08\u5982\u6839\u76ee\u5f55\u548c\u5b50\u76ee\u5f55\u4e2d\u7684 `AGENTS.md`\u3001\u8d21\u732e\u6307\u5357\u3001\u8fc1\u79fb\u7ea6\u5b9a\uff09\uff0c\u8bc6\u522b\u5b9e\u9645\u6280\u672f\u6808\u3001\u5305\u7ba1\u7406\u5668\u3001\u6570\u636e\u5e93\u8fc1\u79fb\u5de5\u5177\u3001\u6d4b\u8bd5\u5165\u53e3\u3001\u524d\u540e\u7aef\u76ee\u5f55\u53ca\u73b0\u6709 E2E \u6846\u67b6\u3002\u6b64\u9636\u6bb5\u53ea\u8bfb\uff0c\u4e0d\u6539\u9879\u76ee\u6587\u4ef6\u3002\n\n\u968f\u540e\u8bb0\u5f55\uff1a\n\n- \u5f53\u524d\u5206\u652f\u4e0e HEAD\uff1b\n- `git status --short`\uff1b\n- \u5df2\u6682\u5b58 diff\u3001\u672a\u6682\u5b58 diff\u3001\u672a\u8ddf\u8e2a\u6587\u4ef6\u6e05\u5355\uff1b\n- \u4e0e\u76ee\u6807\u6587\u4ef6\u91cd\u53e0\u7684\u7528\u6237\u5df2\u6709\u6539\u52a8\u53ca\u5fc5\u8981\u7684\u5185\u5bb9\u54c8\u5e0c\uff1b\n- \u6570\u636e\u5e93\u3001\u540e\u7aef\u3001\u524d\u7aef\u548c E2E \u7684\u5f53\u524d\u76f8\u5173\u6d4b\u8bd5\u72b6\u6001\u3002\n\n\u57fa\u7ebf\u53ea\u7528\u4e8e\u6bd4\u8f83\uff0c\u4e0d\u6267\u884c `stash`\u3001`reset`\u3001`checkout`\u3001\u6e05\u7406\u672a\u8ddf\u8e2a\u6587\u4ef6\u6216\u8986\u76d6\u7528\u6237\u6539\u52a8\u3002\u82e5\u76ee\u6807\u6587\u4ef6\u5df2\u6709\u7528\u6237\u6539\u52a8\uff0c\u6b65\u9aa4\u5408\u540c\u4f1a\u660e\u786e\u8981\u6c42\u4fdd\u7559\u8fd9\u4e9b\u57fa\u7ebf hunks\uff1b\u82e5\u65e0\u6cd5\u53ef\u9760\u533a\u5206\uff0c\u4e3b\u6a21\u578b\u5148\u7f29\u5c0f\u5141\u8bb8\u5199\u5165\u8303\u56f4\u6216\u4eb2\u81ea\u5904\u7406\u51b2\u7a81\u90e8\u5206\uff0c\u4e0d\u628a\u6a21\u7cca\u6240\u6709\u6743\u4ea4\u7ed9 AGY\u3002\n\n\u4e3b\u6a21\u578b\u5728\u6bcf\u4e00\u6b21\u65b0\u7684 AGY \u8c03\u7528\u524d\u91cd\u65b0\u8fd0\u884c `agy models`\uff0c\u53ea\u4ece\u5b9e\u65f6\u8fd4\u56de\u7684 slug \u4e2d\u9009\u62e9\u8db3\u4ee5\u5b8c\u6210\u8be5\u6b65\u9aa4\u7684\u6700\u4f4e\u6210\u672c\u6a21\u578b\uff0c\u4e0d\u4f9d\u8d56\u9759\u6001\u5feb\u7167\uff0c\u4e5f\u4e0d\u731c\u6d4b\u5931\u6548\u522b\u540d\u3002\u4e00\u822c\u4ee5\u5f53\u524d\u6700\u65b0 Flash \u7684 medium \u6863\u627f\u62c5\u8fb9\u754c\u6e05\u695a\u7684\u591a\u6587\u4ef6\u5b9e\u73b0\uff1b\u673a\u68b0\u641c\u7d22\u6216\u5c0f\u578b\u6d4b\u8bd5\u53ef\u7528 low\uff1b\u53ea\u6709\u9a8c\u6536\u8bc1\u660e\u786e\u5c5e\u63a8\u7406\u4e0d\u8db3\u65f6\u624d\u5347\u5230 high\uff0c\u590d\u6742\u8fc1\u79fb\u8bbe\u8ba1\u624d\u8003\u8651\u5b9e\u65f6\u53ef\u7528\u7684 Pro\u3002\u5207\u6362\u6a21\u578b\u5bb6\u65cf\u65f6\u8bb0\u5f55\u539f\u56e0\u3002\u82e5 slug \u62a5 unknown model\uff0c\u5237\u65b0 `agy models` \u540e\u91cd\u65b0\u9009\u62e9\uff0c\u4e0d\u9759\u9ed8\u8de8\u5bb6\u65cf\u964d\u7ea7\u3002\n\n\u4e3b\u6a21\u578b\u5148\u5b8c\u6210\u4e00\u6b21\u53ea\u8bfb\u4f9d\u8d56\u8c03\u67e5\uff0c\u786e\u5b9a\u6bcf\u6b65\u7cbe\u786e\u7684\u8bfb\u53d6/\u5199\u5165\u6587\u4ef6\u96c6\u5408\u3001\u9a8c\u8bc1\u547d\u4ee4\u548c\u8de8\u5c42\u5951\u7ea6\u3002\u5fc5\u8981\u65f6\u53ef\u7528 AGY \u8f85\u52a9\u53ea\u8bfb\u8c03\u67e5\uff1a\n\n```powershell\nagy --model <LIVE_MODEL_SLUG> --mode plan --output-format json --print \"<READ_ONLY_DISCOVERY_CONTRACT>\"\n```\n\n\u53ea\u8bfb\u8c03\u67e5\u53ef\u4ee5\u5e76\u884c\uff0c\u4f46\u4e3b\u6a21\u578b\u5fc5\u987b\u5148\u6c47\u603b\u5e76\u51bb\u7ed3\u7ed3\u679c\uff0c\u624d\u5f00\u59cb\u4efb\u4f55\u5199\u5165\u3002\u672c\u4efb\u52a1\u7684\u56db\u4e2a\u5199\u5165/\u9a8c\u8bc1\u9636\u6bb5\u4e0d\u5e76\u884c\u3002\n\n## 3. \u6bcf\u6b21\u59d4\u6d3e\u7684\u7edf\u4e00\u6b65\u9aa4\u5408\u540c\n\n\u6bcf\u4e2a AGY \u63d0\u793a\u90fd\u5305\u542b\u4ee5\u4e0b\u56fa\u5b9a\u5b57\u6bb5\uff0c\u4e14\u7cbe\u786e\u5230\u672c\u6b65\u9aa4\uff1a\n\n```text\n\u76ee\u6807\uff1a\u672c\u6b65\u9aa4\u552f\u4e00\u3001\u53ef\u9a8c\u6536\u7684\u7ed3\u679c\u3002\n\u4e0a\u4e0b\u6587\uff1a\u6280\u672f\u6808\uff0c\u4ee5\u53ca\u4e0a\u4e00\u9636\u6bb5\u5df2\u7ecf\u7531\u4e3b\u6a21\u578b\u9a8c\u6536\u5e76\u51bb\u7ed3\u7684\u5951\u7ea6\u3002\n\u5141\u8bb8\u8bfb\u53d6\uff1a\u5b8c\u6210\u672c\u6b65\u9aa4\u6240\u9700\u7684\u660e\u786e\u76ee\u5f55\u6216\u6587\u4ef6\u3002\n\u5141\u8bb8\u5199\u5165\uff1a\u9884\u5148\u8bc6\u522b\u7684\u7cbe\u786e\u6587\u4ef6\u6e05\u5355\u6216\u8fb9\u754c\u6e05\u695a\u7684\u8def\u5f84\u96c6\u5408\u3002\n\u4fdd\u6301\u4e0d\u53d8\uff1a\u7528\u6237\u57fa\u7ebf\u6539\u52a8\u3001\u8303\u56f4\u5916\u6587\u4ef6\u3001\u5c1a\u672a\u6388\u6743\u53d8\u5316\u7684\u516c\u5f00\u63a5\u53e3\u548c\u65e2\u6709\u884c\u4e3a\u3002\n\u9a8c\u6536\uff1aAGY \u5e94\u8fd0\u884c\u7684\u5177\u4f53\u547d\u4ee4\u53ca\u9884\u671f\u7ed3\u679c\u3002\n\u8fd4\u56de\uff1a\u5b8c\u6210\u6458\u8981\u3001\u68c0\u67e5\u6587\u4ef6\u3001\u4fee\u6539\u6587\u4ef6\u3001\u547d\u4ee4\u4e0e\u7ed3\u679c\u3001\u9057\u7559\u95ee\u9898\u548c\u4efb\u4f55\u8d8a\u754c\u60c5\u51b5\u3002\n```\n\n\u5b9e\u73b0\u8c03\u7528\u7edf\u4e00\u4ece\u76ee\u6807\u4ed3\u5e93\u6839\u76ee\u5f55\u8fd0\u884c\uff0c\u5e76\u4fdd\u7559 AGY \u9ed8\u8ba4\u6743\u9650\u5ba1\u67e5\uff1a\n\n```powershell\nagy --model <LIVE_MODEL_SLUG> --mode accept-edits --output-format json --print \"<STEP_CONTRACT>\"\n```\n\n\u4e0d\u6dfb\u52a0 `--dangerously-skip-permissions`\u3002\u53ea\u6709\u786e\u9700\u4ed3\u5e93\u5916\u76ee\u5f55\u65f6\u624d\u663e\u5f0f\u4f7f\u7528 `--add-dir`\u3002\u4e3b\u6a21\u578b\u89e3\u6790\u5e76\u4fdd\u5b58\u6bcf\u6b65 JSON \u4e2d\u7684 `conversation_id`\u3001`status`\u3001`response`\u3001`error`\u3001`duration_seconds`\u3001`num_turns` \u548c `usage`\uff1b\u8fd9\u4e9b\u8bb0\u5f55\u653e\u5728\u4f1a\u8bdd\u6216\u4e34\u65f6\u4f4d\u7f6e\uff0c\u4e0d\u6c61\u67d3\u9879\u76ee\u5de5\u4f5c\u6811\u3002\n\n## 4. \u9636\u6bb5\u4e00\uff1a\u6570\u636e\u5e93\u5b57\u6bb5\u8fc1\u79fb\n\n### \u59d4\u6d3e\u76ee\u6807\n\nAGY \u53ea\u5b9e\u73b0\u6570\u636e\u5e93\u5c42\u53d8\u66f4\uff1a\u6309\u9879\u76ee\u73b0\u6709\u8fc1\u79fb\u673a\u5236\u65b0\u589e\u8fc1\u79fb\uff0c\u5fc5\u8981\u65f6\u540c\u6b65 schema\u3001ORM model \u6216\u6570\u636e\u5e93\u7ea7\u6d4b\u8bd5\u3002\u5141\u8bb8\u5199\u5165\u8303\u56f4\u5728\u53ea\u8bfb\u8c03\u67e5\u540e\u7cbe\u786e\u5217\u51fa\uff0c\u4f8b\u5982\u65b0\u7684\u8fc1\u79fb\u6587\u4ef6\u3001\u5bf9\u5e94 schema/model \u6587\u4ef6\u548c\u8fc1\u79fb\u6d4b\u8bd5\uff1b\u7981\u6b62\u4fee\u6539\u63a7\u5236\u5668\u3001\u4e1a\u52a1 API\u3001\u524d\u7aef\u4e0e\u65e0\u5173\u914d\u7f6e\u3002\n\n\u5408\u540c\u4e2d\u56fa\u5b9a\u5b57\u6bb5\u540d\u79f0\u3001\u7c7b\u578b\u3001\u662f\u5426\u4e3a\u7a7a\u3001\u9ed8\u8ba4\u503c\u3001\u7d22\u5f15/\u7ea6\u675f\u3001\u5386\u53f2\u6570\u636e\u5904\u7406\u65b9\u5f0f\u3001\u90e8\u7f72\u517c\u5bb9\u987a\u5e8f\u4ee5\u53ca\u9879\u76ee\u8981\u6c42\u7684\u56de\u6eda\u7b56\u7565\u3002AGY \u5fc5\u987b\u68c0\u67e5\u5df2\u6709\u6570\u636e\u573a\u666f\uff0c\u907f\u514d\u53ea\u5bf9\u7a7a\u5e93\u6210\u7acb\u3002\n\n### \u4e3b\u6a21\u578b\u9a8c\u6536\u95e8\n\nAGY \u8fd4\u56de\u540e\uff0c\u4e3b\u6a21\u578b\uff1a\n\n1. \u4e0e\u6267\u884c\u524d\u57fa\u7ebf\u6bd4\u8f83\uff0c\u5217\u51fa\u672c\u9636\u6bb5\u65b0\u589e\u53d8\u66f4\uff1b\n2. \u9605\u8bfb\u5b8c\u6574\u8fc1\u79fb diff\uff0c\u786e\u8ba4\u5199\u5165\u8303\u56f4\u3001\u8fc1\u79fb\u987a\u5e8f\u3001\u5e42\u7b49/\u56de\u6eda\u6216\u5411\u524d\u517c\u5bb9\u7b56\u7565\u3001\u5386\u53f2\u6570\u636e\u5904\u7406\u548c\u7ea6\u675f\u5747\u6b63\u786e\uff1b\n3. \u4eb2\u81ea\u8fd0\u884c\u9879\u76ee\u5b9e\u9645\u7684\u8fc1\u79fb\u6d4b\u8bd5\uff1a\u81f3\u5c11\u5305\u542b\u4ece\u57fa\u7ebf schema \u6b63\u5411\u5347\u7ea7\u3001\u5df2\u6709\u6570\u636e\u5347\u7ea7\u9a8c\u8bc1\uff0c\u4ee5\u53ca\u9879\u76ee\u652f\u6301\u65f6\u7684 down/up \u6216\u7b49\u4ef7\u56de\u6eda\u9a8c\u8bc1\uff1b\n4. \u8fd0\u884c\u76f8\u5173\u6570\u636e\u5e93/ORM \u6d4b\u8bd5\u5e76\u6838\u5bf9\u5b9e\u9645 schema\uff1b\n5. \u6838\u5bf9 AGY \u62a5\u544a\u7684\u6587\u4ef6\u4e0e\u547d\u4ee4\u548c\u5de5\u4f5c\u533a\u5b9e\u51b5\u4e00\u81f4\uff1b\n6. \u91cd\u65b0\u6838\u5bf9\u7528\u6237\u539f\u6709\u6539\u52a8\u7684 hunks\u3001\u6682\u5b58\u72b6\u6001\u548c\u672a\u8ddf\u8e2a\u6587\u4ef6\u4ecd\u5b8c\u6574\u3002\n\n\u516d\u9879\u5747\u901a\u8fc7\u540e\uff0c\u51bb\u7ed3\u201c\u6570\u636e\u5e93\u5b57\u6bb5\u5951\u7ea6\u201d\uff0c\u5305\u62ec\u5b57\u6bb5\u5b9a\u4e49\u3001\u7ea6\u675f\u3001\u9ed8\u8ba4\u503c\u3001\u8bfb\u5199\u8bed\u4e49\u53ca\u90e8\u7f72\u517c\u5bb9\u8981\u6c42\uff0c\u4f5c\u4e3a\u540e\u7aef\u9636\u6bb5\u7684\u4e0d\u53ef\u81ea\u884c\u6539\u5199\u8f93\u5165\u3002\n\n## 5. \u9636\u6bb5\u4e8c\uff1a\u540e\u7aef\u63a5\u53e3\u9002\u914d\n\n### \u59d4\u6d3e\u76ee\u6807\n\n\u5237\u65b0 `agy models` \u540e\u9009\u62e9\u5b9e\u65f6\u6a21\u578b\u3002AGY \u4f9d\u636e\u5df2\u9a8c\u6536\u7684\u6570\u636e\u5e93\u5b57\u6bb5\u5951\u7ea6\uff0c\u6700\u5c0f\u5316\u9002\u914d\u6301\u4e45\u5316\u6620\u5c04\u3001\u9886\u57df/\u670d\u52a1\u903b\u8f91\u3001\u8bf7\u6c42\u4e0e\u54cd\u5e94 DTO\u3001\u6821\u9a8c\u3001\u5e8f\u5217\u5316\u53ca\u63a5\u53e3\u6d4b\u8bd5\u3002\u5141\u8bb8\u5199\u5165\u8303\u56f4\u53ea\u5305\u542b\u8c03\u67e5\u786e\u8ba4\u7684\u540e\u7aef\u5b9e\u73b0\u548c\u6d4b\u8bd5\u6587\u4ef6\uff1b\u6570\u636e\u5e93\u8fc1\u79fb\u5951\u7ea6\u3001\u524d\u7aef\u548c\u8303\u56f4\u5916\u516c\u5f00\u63a5\u53e3\u4fdd\u6301\u4e0d\u53d8\u3002\u82e5\u517c\u5bb9\u6027\u8981\u6c42\u5b58\u5728\uff0c\u660e\u786e\u65e7\u5ba2\u6237\u7aef\u7f3a\u7701\u8be5\u5b57\u6bb5\u65f6\u7684\u884c\u4e3a\u53ca\u65b0\u65e7\u54cd\u5e94\u8bed\u4e49\u3002\n\n### \u4e3b\u6a21\u578b\u9a8c\u6536\u95e8\n\n\u4e3b\u6a21\u578b\u9010\u9879\u68c0\u67e5\u672c\u9636\u6bb5\u76f8\u5bf9\u57fa\u7ebf\u7684\u65b0\u589e diff\uff0c\u91cd\u70b9\u9a8c\u8bc1\uff1a\u5b57\u6bb5\u6620\u5c04\u6ca1\u6709\u9057\u6f0f\uff1b\u7f3a\u5931\u503c\u3001\u975e\u6cd5\u503c\u3001\u7a7a\u503c\u3001\u9ed8\u8ba4\u503c\u548c\u6743\u9650\u8fb9\u754c\u6b63\u786e\uff1b\u8bf7\u6c42/\u54cd\u5e94\u5951\u7ea6\u4e0e\u6570\u636e\u5e93\u5951\u7ea6\u4e00\u81f4\uff1b\u6ca1\u6709\u987a\u624b\u91cd\u6784\u6216\u6269\u5927\u516c\u5f00\u63a5\u53e3\u3002\u968f\u540e\u4eb2\u81ea\u8fd0\u884c\u540e\u7aef\u5355\u5143\u6d4b\u8bd5\u3001\u63a5\u53e3/\u96c6\u6210\u6d4b\u8bd5\u3001\u9759\u6001\u68c0\u67e5\u6216\u7f16\u8bd1\uff0c\u5e76\u5728\u6d4b\u8bd5\u6570\u636e\u5e93\u4e0a\u9a8c\u8bc1\u4e00\u6b21\u771f\u5b9e\u8bfb\u5199\u95ed\u73af\u3002\u518d\u6b21\u786e\u8ba4\u539f\u6709\u7528\u6237\u6539\u52a8\u5b8c\u6574\u3002\n\n\u5168\u90e8\u901a\u8fc7\u540e\u51bb\u7ed3\u201cAPI \u5951\u7ea6\u201d\uff1a\u5b57\u6bb5\u540d\u4e0e\u7c7b\u578b\u3001\u662f\u5426\u5fc5\u586b\u3001\u9ed8\u8ba4\u884c\u4e3a\u3001\u6821\u9a8c\u9519\u8bef\u3001\u54cd\u5e94\u5f62\u72b6\u548c\u517c\u5bb9\u89c4\u5219\u3002\u524d\u7aef\u53ea\u80fd\u6d88\u8d39\u8be5\u5951\u7ea6\uff0c\u4e0d\u80fd\u81ea\u884c\u63a8\u65ad\u6216\u91cd\u65b0\u5b9a\u4e49\u3002\n\n## 6. \u9636\u6bb5\u4e09\uff1a\u524d\u7aef\u8868\u5355\u66f4\u65b0\n\n### \u59d4\u6d3e\u76ee\u6807\n\n\u518d\u6b21\u5237\u65b0 `agy models`\u3002AGY \u4f9d\u636e\u5df2\u9a8c\u6536 API \u5951\u7ea6\u66f4\u65b0\u8868\u5355\u5b57\u6bb5\u3001\u521d\u59cb\u503c\u3001\u524d\u7aef\u7c7b\u578b\u3001\u6821\u9a8c\u3001\u63d0\u4ea4 payload\u3001\u7f16\u8f91\u6001\u56de\u586b\u3001\u9519\u8bef\u5c55\u793a\u53ca\u5fc5\u8981\u7684\u7ec4\u4ef6\u6d4b\u8bd5\u3002\u5141\u8bb8\u5199\u5165\u8303\u56f4\u53ea\u5305\u542b\u786e\u8ba4\u8fc7\u7684\u524d\u7aef\u7ec4\u4ef6\u3001\u7c7b\u578b/\u5ba2\u6237\u7aef\u5c01\u88c5\u548c\u6d4b\u8bd5\u6587\u4ef6\uff1b\u4e0d\u5f97\u4fee\u6539\u6570\u636e\u5e93\u3001\u540e\u7aef\u6216\u65e0\u5173 UI\u3002\u63d0\u793a\u4e2d\u660e\u786e\u73b0\u6709\u8bbe\u8ba1\u7cfb\u7edf\u3001\u53ef\u8bbf\u95ee\u6027\u7ea6\u5b9a\u548c\u7528\u6237\u5df2\u6709 UI \u6539\u52a8\u5fc5\u987b\u4fdd\u7559\u3002\n\n### \u4e3b\u6a21\u578b\u9a8c\u6536\u95e8\n\n\u4e3b\u6a21\u578b\u68c0\u67e5\u5b8c\u6574 UI diff \u548c\u5b9e\u9645\u884c\u4e3a\uff0c\u8986\u76d6\u65b0\u5efa\u3001\u7f16\u8f91\u56de\u586b\u3001\u6709\u6548\u63d0\u4ea4\u3001\u5fc5\u586b/\u975e\u6cd5\u503c\u3001\u540e\u7aef\u9519\u8bef\u663e\u793a\u3001\u53d6\u6d88\u6216\u91cd\u590d\u63d0\u4ea4\u7b49\u9002\u7528\u8fb9\u754c\uff1b\u786e\u8ba4 payload \u4e0e API \u5951\u7ea6\u9010\u5b57\u6bb5\u4e00\u81f4\u4e14\u6ca1\u6709\u7834\u574f\u65e7\u6d41\u7a0b\u3002\u4e3b\u6a21\u578b\u4eb2\u81ea\u8fd0\u884c\u683c\u5f0f/\u9759\u6001\u68c0\u67e5\u3001\u7c7b\u578b\u68c0\u67e5\u3001\u524d\u7aef\u5355\u5143\u6216\u7ec4\u4ef6\u6d4b\u8bd5\u4ee5\u53ca\u751f\u4ea7\u6784\u5efa\uff0c\u5e76\u5728\u771f\u5b9e\u6d4f\u89c8\u5668\u4e2d\u505a\u76ee\u6807\u8868\u5355\u7684\u6700\u5c0f\u4ea4\u4e92\u9a8c\u8bc1\u3002\u7136\u540e\u518d\u6b21\u6838\u5bf9\u7528\u6237\u57fa\u7ebf\u6539\u52a8\u5b8c\u6574\u3002\n\n\u901a\u8fc7\u540e\u51bb\u7ed3\u201c\u7528\u6237\u6d41\u7a0b\u5951\u7ea6\u201d\uff0c\u5305\u62ec\u9875\u9762\u5165\u53e3\u3001\u8f93\u5165\u6b65\u9aa4\u3001\u8bf7\u6c42\u3001\u6210\u529f\u53cd\u9988\u3001\u5237\u65b0\u540e\u6301\u4e45\u5316\u7ed3\u679c\u548c\u9519\u8bef\u8def\u5f84\uff0c\u4f9b E2E \u9a8c\u8bc1\u76f4\u63a5\u4f7f\u7528\u3002\n\n## 7. \u9636\u6bb5\u56db\uff1a\u7aef\u5230\u7aef\u9a8c\u8bc1\u4e0e\u5b8c\u6574\u5ba1\u67e5\n\n\u6700\u7ec8\u9a8c\u6536\u7531\u4e3b\u6a21\u578b\u8d1f\u8d23\uff0c\u4e0d\u628a AGY \u7684\u81ea\u6d4b\u62a5\u544a\u5f53\u4f5c\u7ed3\u8bba\u3002\u4e3b\u6a21\u578b\u5148\u786e\u8ba4\u6d4b\u8bd5\u670d\u52a1\u3001\u6570\u636e\u5e93\u548c\u524d\u7aef\u5747\u4f7f\u7528\u5f53\u524d\u5de5\u4f5c\u6811\uff0c\u518d\u6267\u884c\u65e2\u6709 E2E \u6d4b\u8bd5\u6216\u6309\u51bb\u7ed3\u7684\u7528\u6237\u6d41\u7a0b\u8865\u5145\u6700\u5c0f\u3001\u7a33\u5b9a\u7684 E2E \u7528\u4f8b\uff08\u82e5\u9700\u65b0\u589e\u6d4b\u8bd5\u6587\u4ef6\uff0c\u53ef\u4f5c\u4e3a\u72ec\u7acb AGY \u5b9e\u73b0\u6b65\u9aa4\uff0c\u7ed9\u51fa\u7cbe\u786e\u5199\u5165\u8303\u56f4\uff0c\u5e76\u7ecf\u8fc7\u540c\u6837\u5ba1\u67e5\u95e8\uff09\u3002\n\n\u7aef\u5230\u7aef\u573a\u666f\u81f3\u5c11\u9a8c\u8bc1\uff1a\n\n1. \u4ece\u9875\u9762\u6253\u5f00\u8868\u5355\u5e76\u6b63\u786e\u663e\u793a\u65b0\u5b57\u6bb5\uff1b\n2. \u586b\u5199\u5e76\u63d0\u4ea4\u540e\uff0c\u8bf7\u6c42 payload \u7b26\u5408\u51bb\u7ed3\u7684 API \u5951\u7ea6\uff1b\n3. \u540e\u7aef\u6210\u529f\u843d\u5e93\uff0c\u6570\u636e\u5e93\u503c\u548c\u7ea6\u675f\u7b26\u5408\u8fc1\u79fb\u5951\u7ea6\uff1b\n4. \u9875\u9762\u663e\u793a\u6210\u529f\u72b6\u6001\uff0c\u91cd\u65b0\u52a0\u8f7d\u6216\u8fdb\u5165\u7f16\u8f91\u6001\u540e\u80fd\u6b63\u786e\u56de\u586b\uff1b\n5. \u81f3\u5c11\u4e00\u4e2a\u5173\u952e\u65e0\u6548\u8f93\u5165\u6216\u540e\u7aef\u6821\u9a8c\u5931\u8d25\u8def\u5f84\u80fd\u7ed9\u51fa\u6b63\u786e\u53cd\u9988\uff1b\n6. \u65e2\u6709\u6838\u5fc3\u6d41\u7a0b\u56de\u5f52\u6d4b\u8bd5\u672a\u88ab\u7834\u574f\u3002\n\n\u4e3b\u6a21\u578b\u6700\u540e\u67e5\u770b\u4ece\u6700\u521d\u57fa\u7ebf\u5230\u5f53\u524d\u72b6\u6001\u7684\u5b8c\u6574 diff\uff0c\u8fd0\u884c\u8986\u76d6\u6570\u636e\u5e93\u3001\u540e\u7aef\u3001\u524d\u7aef\u548c E2E \u7684\u6700\u5168\u9762\u76f8\u5173\u9a8c\u8bc1\uff0c\u5e76\u518d\u6b21\u6bd4\u5bf9\u6700\u521d\u7684 staged/unstaged/untracked \u57fa\u7ebf\u3002\u53ea\u6709\u5b9e\u9645\u547d\u4ee4\u6210\u529f\u3001\u7528\u6237\u53ef\u89c1\u6d41\u7a0b\u6210\u529f\u3001\u53d8\u66f4\u672a\u8d8a\u754c\u4e14\u7528\u6237\u539f\u6709\u6539\u52a8\u5b8c\u6574\uff0c\u624d\u5224\u5b9a\u4efb\u52a1\u5b8c\u6210\u3002\n\n## 8. \u5931\u8d25\u3001\u90e8\u5206\u5199\u5165\u4e0e\u8fd4\u5de5\u95ed\u73af\n\n\u82e5 AGY \u975e\u96f6\u9000\u51fa\u6216\u8fd4\u56de `status: ERROR`\uff0c\u4e3b\u6a21\u578b\u5148\u68c0\u67e5 stderr\u3001`error`\u3001\u5de5\u4f5c\u533a\u771f\u5b9e\u72b6\u6001\u4ee5\u53ca\u662f\u5426\u53d1\u751f\u90e8\u5206\u5199\u5165\uff1b\u4e0d\u76f4\u63a5\u91cd\u8dd1\uff0c\u4e5f\u4e0d\u8ba9\u4e0b\u4e00\u9636\u6bb5\u5f00\u59cb\u3002\u82e5\u5b9e\u73b0\u5b58\u5728\u53ef\u4fee\u590d\u95ee\u9898\uff0c\u4f7f\u7528\u8be5\u6b65\u9aa4\u7b2c\u4e00\u6b21\u8fd4\u56de\u7684 `conversation_id` \u548c\u540c\u4e00\u4e2a\u5b9e\u65f6\u6a21\u578b slug \u8fd4\u5de5\uff1a\n\n```powershell\nagy --conversation <CONVERSATION_ID> --model <SAME_LIVE_MODEL_SLUG> --mode accept-edits --output-format json --print \"<\u5177\u4f53\u5931\u8d25\u8bc1\u636e + \u539f\u5141\u8bb8\u5199\u5165\u8303\u56f4 + \u4e0d\u53d8\u7684\u539f\u9a8c\u6536\u6761\u4ef6>\"\n```\n\n\u8fd4\u5de5\u63d0\u793a\u5fc5\u987b\u7ed9\u51fa\u5177\u4f53\u7684\u5931\u8d25\u6d4b\u8bd5\u3001\u9519\u8bef\u8f93\u51fa\u3001diff \u4f4d\u7f6e\u6216\u8d8a\u754c\u6587\u4ef6\uff0c\u4e0d\u80fd\u53ea\u8bf4\u201c\u518d\u68c0\u67e5\u201d\u3002\u8fd4\u5de5\u540e\u4ece\u5934\u6267\u884c\u516d\u9879\u4e3b\u6a21\u578b\u5ba1\u67e5\u95e8\uff0c\u5e76\u786e\u8ba4 `num_turns` \u786e\u5b9e\u589e\u957f\u3002\u540c\u4e00\u7f3a\u9677\u6700\u591a\u4ea4\u7ed9 AGY \u4fee\u6b63\u4e24\u8f6e\uff1b\u82e5\u4ecd\u5931\u8d25\uff0c\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1\u6700\u5c0f\u5fc5\u8981\u4fee\u6539\u5e76\u91cd\u65b0\u6267\u884c\u5168\u90e8\u76f8\u5173\u9a8c\u6536\u3002\u53ea\u6709\u5f53\u5931\u8d25\u8bc1\u660e\u786e\u5c5e\u63a8\u7406\u80fd\u529b\u4e0d\u8db3\u65f6\uff0c\u624d\u5728\u5237\u65b0 `agy models` \u540e\u5347\u7ea7\u63a8\u7406\u6863\uff0c\u5e76\u8bb0\u5f55\u5347\u7ea7\u7406\u7531\u3002\n\n\u82e5\u53d1\u73b0\u8d8a\u754c\u5199\u5165\uff0c\u5148\u8bc6\u522b\u54ea\u4e9b hunks \u5c5e\u4e8e\u672c\u6b21 AGY\uff1b\u5728\u4e0d\u89e6\u78b0\u7528\u6237\u57fa\u7ebf\u6539\u52a8\u7684\u524d\u63d0\u4e0b\u64a4\u9500\u6216\u6700\u5c0f\u4fee\u6b63\u672c\u6b21\u8d8a\u754c\u90e8\u5206\uff0c\u518d\u4ee5\u539f\u5408\u540c\u8fd4\u5de5\u3002\u4efb\u4f55\u60c5\u51b5\u4e0b\u90fd\u4e0d\u901a\u8fc7\u91cd\u7f6e\u6574\u4e2a\u6587\u4ef6\u6216\u5de5\u4f5c\u6811\u6765\u6062\u590d\u3002\n\n## 9. \u6700\u7ec8\u4ea4\u4ed8\u8bb0\u5f55\n\n\u6700\u7ec8\u56de\u590d\u5e94\u5217\u51fa\uff1a\u5b9e\u9645\u5b8c\u6210\u7684\u56db\u9636\u6bb5\u5185\u5bb9\uff1b\u6bcf\u9636\u6bb5\u91c7\u7528\u7684\u5b9e\u65f6\u6a21\u578b slug \u4e0e\u9009\u62e9\u7406\u7531\uff1b\u5404 `conversation_id` \u548c\u662f\u5426\u53d1\u751f\u8fd4\u5de5\uff1b\u4e3b\u6a21\u578b\u5b9e\u9645\u8fd0\u884c\u7684\u547d\u4ee4\u53ca\u7ed3\u679c\uff1b\u5b8c\u6574 diff \u7684\u8303\u56f4\uff1b\u7528\u6237\u539f\u6709\u6539\u52a8\u4fdd\u6301\u60c5\u51b5\uff1b\u4ee5\u53ca\u4ecd\u5b58\u5728\u7684\u9650\u5236\u6216\u672a\u8986\u76d6\u573a\u666f\u3002\u6ca1\u6709\u771f\u5b9e diff\u3001\u771f\u5b9e\u6d4b\u8bd5\u548c\u7528\u6237\u6d41\u7a0b\u8bc1\u636e\u65f6\uff0c\u4e0d\u58f0\u660e\u5b8c\u6210\u3002\n"}], "grading": {"expectations": [{"text": "\u9009\u62e9\u5de5\u4f5c\u6a21\u578b\u524d\u660e\u786e\u8fd0\u884c agy models \u83b7\u53d6\u5b9e\u65f6\u6a21\u578b\u5217\u8868", "passed": true, "evidence": "\u7b2c 25 \u884c\u8981\u6c42\u6bcf\u6b21\u65b0\u8c03\u7528\u524d\u8fd0\u884c agy models \u5e76\u53ea\u4f7f\u7528\u5b9e\u65f6 slug\u3002"}, {"text": "\u6309\u6570\u636e\u5e93\u3001\u540e\u7aef\u3001\u524d\u7aef\u3001\u7aef\u5230\u7aef\u9a8c\u8bc1\u7684\u4f9d\u8d56\u987a\u5e8f\u4e32\u884c\u6267\u884c", "passed": true, "evidence": "\u65b9\u6848\u660e\u786e\u56db\u9636\u6bb5\u4e25\u683c\u4e32\u884c\u3002"}, {"text": "\u6bcf\u4e00\u6b65\u90fd\u5305\u542b\u4e3b\u6a21\u578b\u4eb2\u81ea\u68c0\u67e5 diff \u548c\u6d4b\u8bd5\u7684\u9a8c\u6536\u95e8", "passed": true, "evidence": "\u6bcf\u4e2a\u9636\u6bb5\u90fd\u5b9a\u4e49\u4e3b\u6a21\u578b\u9a8c\u6536\u95e8\uff0c\u5e76\u8981\u6c42\u4eb2\u81ea\u8fd0\u884c\u6d4b\u8bd5\u3002"}, {"text": "\u660e\u786e\u4fdd\u7559\u7528\u6237\u5df2\u6709\u672a\u63d0\u4ea4\u6539\u52a8", "passed": true, "evidence": "\u57fa\u7ebf\u7ae0\u8282\u5c06\u7528\u6237\u6539\u52a8\u6807\u8bb0\u4e3a\u53d7\u4fdd\u62a4\u5185\u5bb9\u3002"}, {"text": "\u4fdd\u5b58 conversation_id\uff0c\u4ee5\u4fbf\u5ba1\u67e5\u5931\u8d25\u540e\u5728\u540c\u4e00 AGY \u4f1a\u8bdd\u8fd4\u5de5", "passed": true, "evidence": "\u8c03\u7528\u534f\u8bae\u4fdd\u5b58 conversation_id\uff0c\u8fd4\u5de5\u7ae0\u8282\u4f7f\u7528\u539f\u4f1a\u8bdd\u3002"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "complex-workflow-without_skill", "prompt": "\u4f60\u6b63\u5728\u4f7f\u7528\u9ad8\u9636 Codex \u6a21\u578b\u3002\u4e00\u4e2a\u73b0\u6709 Web \u9879\u76ee\u9700\u8981\u4f9d\u6b21\u5b8c\u6210\u6570\u636e\u5e93\u5b57\u6bb5\u8fc1\u79fb\u3001\u540e\u7aef\u63a5\u53e3\u9002\u914d\u3001\u524d\u7aef\u8868\u5355\u66f4\u65b0\u548c\u7aef\u5230\u7aef\u9a8c\u8bc1\u3002\u8bf7\u53ea\u8f93\u51fa\u4f60\u5c06\u5982\u4f55\u4f7f\u7528 agy \u7f16\u6392\u8fd9\u9879\u4efb\u52a1\u7684\u6267\u884c\u65b9\u6848\uff0c\u4e0d\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u3002\u9879\u76ee\u91cc\u5df2\u6709\u7528\u6237\u672a\u63d0\u4ea4\u6539\u52a8\u3002", "eval_id": 1, "outputs": [{"name": "result.md", "type": "text", "content": "# \u4f7f\u7528 AGY \u7f16\u6392\u6570\u636e\u5e93\u5230\u524d\u7aef\u7684\u4e32\u884c\u4ea4\u4ed8\u65b9\u6848\n\n## 1. \u7f16\u6392\u539f\u5219\n\n\u8fd9\u9879\u5de5\u4f5c\u5e94\u7531\u4e3b Codex \u8d1f\u8d23\u4efb\u52a1\u62c6\u5206\u3001\u8303\u56f4\u63a7\u5236\u548c\u6700\u7ec8\u9a8c\u6536\uff0cAGY \u53ea\u6267\u884c\u8fb9\u754c\u6e05\u6670\u3001\u53ef\u72ec\u7acb\u9a8c\u6536\u7684\u6b65\u9aa4\u3002\u6570\u636e\u5e93\u8fc1\u79fb\u3001\u540e\u7aef\u5951\u7ea6\u3001\u524d\u7aef\u8868\u5355\u548c\u7aef\u5230\u7aef\u9a8c\u8bc1\u5b58\u5728\u4e25\u683c\u7684\u524d\u540e\u4f9d\u8d56\uff0c\u56e0\u6b64\u9ed8\u8ba4\u4e32\u884c\u6267\u884c\uff1b\u4e0d\u4f1a\u4e3a\u4e86\u5e76\u53d1\u800c\u8ba9\u591a\u4e2a AGY \u4f1a\u8bdd\u540c\u65f6\u6539\u52a8\u5171\u4eab\u6587\u4ef6\u6216\u5c1a\u672a\u7a33\u5b9a\u7684\u63a5\u53e3\u3002\n\nAGY \u8fd4\u56de\u6210\u529f\u3001\u547d\u4ee4\u9000\u51fa\u7801\u4e3a 0\uff0c\u53ea\u8bf4\u660e\u4ee3\u7406\u8c03\u7528\u5b8c\u6210\uff0c\u4e0d\u4ee3\u8868\u5b9e\u73b0\u5df2\u9a8c\u6536\u3002\u6bcf\u4e2a\u9636\u6bb5\u7ed3\u675f\u540e\uff0c\u4e3b Codex \u90fd\u5fc5\u987b\u4eb2\u81ea\u68c0\u67e5\u5de5\u4f5c\u533a\u3001\u5dee\u5f02\u548c\u6d4b\u8bd5\u7ed3\u679c\uff0c\u901a\u8fc7\u95e8\u7981\u540e\u624d\u8fdb\u5165\u4e0b\u4e00\u9636\u6bb5\u3002\n\n## 2. \u6267\u884c\u524d\u5efa\u7acb\u53ea\u8bfb\u57fa\u7ebf\n\n1. \u8bfb\u53d6\u4ed3\u5e93\u4e2d\u7684 `AGENTS.md`\u3001\u5f00\u53d1\u6587\u6863\u3001\u8fc1\u79fb\u89c4\u8303\u3001\u6d4b\u8bd5\u547d\u4ee4\u53ca\u5305\u7ba1\u7406\u914d\u7f6e\u3002\n2. \u8fd0\u884c `agy models`\uff0c\u4ee5\u5b9e\u65f6\u8f93\u51fa\u9009\u62e9\u6a21\u578b slug\uff0c\u4e0d\u4f9d\u8d56\u8bb0\u5fc6\u4e2d\u7684\u6a21\u578b\u540d\u79f0\u3002\u8fc1\u79fb\u8bbe\u8ba1\u548c\u8de8\u5c42\u5951\u7ea6\u4f18\u5148\u9009\u62e9\u64c5\u957f\u957f\u4e0a\u4e0b\u6587\u4e0e\u63a8\u7406\u7684\u53ef\u7528\u6a21\u578b\uff1b\u673a\u68b0\u5b9e\u73b0\u6216\u805a\u7126\u6d4b\u8bd5\u53ef\u9009\u6210\u672c\u66f4\u4f4e\u7684\u53ef\u7528\u6a21\u578b\u3002\n3. \u8bb0\u5f55\u4f46\u4e0d\u6539\u52a8\u4ee5\u4e0b\u57fa\u7ebf\uff1a\n   - `git status --short`\uff1b\n   - \u5df2\u8ddf\u8e2a\u6587\u4ef6\u7684 `git diff` \u548c `git diff --cached`\uff1b\n   - \u672a\u8ddf\u8e2a\u6587\u4ef6\u6e05\u5355\uff1b\n   - \u5f53\u524d\u5206\u652f\u4e0e HEAD\uff1b\n   - \u4e0e\u6570\u636e\u5e93\u3001\u540e\u7aef\u3001\u524d\u7aef\u548c E2E \u6709\u5173\u7684\u73b0\u6709\u6d4b\u8bd5\u72b6\u6001\u3002\n4. \u5efa\u7acb\u201c\u7528\u6237\u539f\u6709\u6539\u52a8\u6e05\u5355\u201d\uff0c\u9010\u9879\u8bb0\u5f55\u6587\u4ef6\u8def\u5f84\u548c\u521d\u59cb\u5dee\u5f02\u3002\u6574\u4e2a\u6d41\u7a0b\u7981\u6b62\u6267\u884c `git stash`\u3001`git reset`\u3001`git checkout --`\u3001\u6e05\u7406\u672a\u8ddf\u8e2a\u6587\u4ef6\u6216\u8986\u76d6\u5f0f\u683c\u5f0f\u5316\u3002\u82e5\u7528\u6237\u6539\u52a8\u4e0e\u4efb\u52a1\u5fc5\u6539\u533a\u57df\u91cd\u53e0\uff0c\u4e3b Codex\u5148\u7406\u89e3\u5e76\u628a\u5b83\u4f5c\u4e3a\u5f53\u524d\u57fa\u7ebf\u4fdd\u7559\uff1b\u65e0\u6cd5\u5b89\u5168\u533a\u5206\u65f6\u6682\u505c\u8be5\u5199\u5165\u6b65\u9aa4\u5e76\u8bf7\u6c42\u7528\u6237\u51b3\u5b9a\u3002\n5. \u5148\u7531\u4e3b Codex\u786e\u8ba4\u5b9e\u9645\u6280\u672f\u6808\u3001\u73b0\u6709\u5b57\u6bb5\u540d\u3001\u76ee\u6807\u5b57\u6bb5\u5b9a\u4e49\u3001\u517c\u5bb9\u8981\u6c42\u548c\u56de\u6eda\u7b56\u7565\uff0c\u5f62\u6210\u56db\u9636\u6bb5\u7684\u5951\u7ea6\u8868\u3002\u672a\u786e\u8ba4\u7684\u4fe1\u606f\u4e0d\u4f1a\u8ba9 AGY \u81ea\u884c\u731c\u6d4b\u3002\n\n## 3. \u901a\u7528 AGY \u8c03\u7528\u534f\u8bae\n\n\u6bcf\u4e00\u6b65\u4ece\u9879\u76ee\u6839\u76ee\u5f55\u5355\u72ec\u542f\u52a8\u4e00\u4e2a headless \u8c03\u7528\uff0c\u663e\u5f0f\u6307\u5b9a\u5b9e\u65f6\u6a21\u578b\u3001\u6267\u884c\u6a21\u5f0f\u548c JSON \u8f93\u51fa\u3002\u5b9e\u9645\u8c03\u7528\u5f62\u6001\u4e3a\uff1a\n\n```powershell\nagy --print \"<\u8be5\u9636\u6bb5\u5b8c\u6574\u63d0\u793a\u8bcd>\" --model <LIVE_MODEL_SLUG> --mode accept-edits --output-format json\n```\n\n\u53ea\u8bfb\u8c03\u67e5\u4f7f\u7528 `--mode plan`\uff1b\u5df2\u6279\u51c6\u4e14\u6587\u4ef6\u8303\u56f4\u660e\u786e\u7684\u5b9e\u73b0\u624d\u4f7f\u7528 `--mode accept-edits`\u3002\u9ed8\u8ba4\u4e0d\u4f7f\u7528 `--dangerously-skip-permissions`\u3002\u63d0\u793a\u8bcd\u5fc5\u987b\u5305\u542b\uff1a\u9636\u6bb5\u76ee\u6807\u3001\u5141\u8bb8\u8bfb\u53d6\u8303\u56f4\u3001\u5141\u8bb8\u4fee\u6539\u7684\u7cbe\u786e\u8def\u5f84/\u6587\u4ef6\u7c7b\u578b\u3001\u7981\u6b62\u89e6\u78b0\u7684\u7528\u6237\u6539\u52a8\u3001\u4e0a\u4e00\u6b65\u5df2\u9a8c\u6536\u7684\u5951\u7ea6\u3001\u9a8c\u6536\u547d\u4ee4\uff0c\u4ee5\u53ca\u8981\u6c42\u8fd4\u56de\u7684\u7ed3\u6784\u3002\n\n\u6bcf\u6b21\u4fdd\u5b58 JSON \u4e2d\u7684 `conversation_id`\u3001`status`\u3001`response`\u3001`error` \u548c\u9a8c\u8bc1\u6458\u8981\u3002\u8981\u6c42 AGY \u660e\u786e\u62a5\u544a\uff1a\u68c0\u67e5\u8fc7\u7684\u6587\u4ef6\u3001\u4fee\u6539\u8fc7\u7684\u6587\u4ef6\u3001\u8fd0\u884c\u8fc7\u7684\u547d\u4ee4\u53ca\u7ed3\u679c\u3001\u672a\u89e3\u51b3\u95ee\u9898\u3001\u662f\u5426\u8d8a\u754c\u3002\u975e\u96f6\u9000\u51fa\u7801\u3001`status: ERROR`\u3001\u7f3a\u5931\u7ed3\u679c\u6216\u6458\u8981\u4e0e\u5de5\u4f5c\u533a\u4e0d\u7b26\u90fd\u76f4\u63a5\u5224\u4e3a\u672a\u901a\u8fc7\u3002\n\n## 4. \u4e32\u884c\u4efb\u52a1\u4e0e\u9010\u6b65\u9a8c\u6536\n\n### \u9636\u6bb5 A\uff1a\u6570\u636e\u5e93\u5b57\u6bb5\u8fc1\u79fb\n\n\u59d4\u6d3e\u76ee\u6807\uff1a\u6309\u7167\u9879\u76ee\u73b0\u6709\u8fc1\u79fb\u6846\u67b6\u65b0\u589e\u53ef\u56de\u6eda\u3001\u5411\u524d\u517c\u5bb9\u7684\u5b57\u6bb5\u8fc1\u79fb\uff0c\u5e76\u540c\u6b65\u5fc5\u8981\u7684\u6570\u636e\u5e93\u6a21\u578b\u6216 schema \u5b9a\u4e49\u3002\n\n- \u5141\u8bb8\u8303\u56f4\uff1a\u65b0\u8fc1\u79fb\u6587\u4ef6\u3001\u4e0e\u8be5\u5b57\u6bb5\u76f4\u63a5\u5bf9\u5e94\u7684 schema/model \u6587\u4ef6\u3001\u8fc1\u79fb\u6d4b\u8bd5\uff1b\u4e0d\u5141\u8bb8\u4fee\u6539\u540e\u7aef\u63a5\u53e3\u3001\u524d\u7aef\u6216\u65e0\u5173\u914d\u7f6e\u3002\n- \u63d0\u793a\u8bcd\u91cd\u70b9\uff1a\u5b57\u6bb5\u7c7b\u578b\u3001\u7a7a\u503c/\u9ed8\u8ba4\u503c\u3001\u7d22\u5f15\u6216\u7ea6\u675f\u3001\u5386\u53f2\u6570\u636e\u5904\u7406\u3001\u90e8\u7f72\u987a\u5e8f\u3001\u56de\u6eda\u8def\u5f84\uff0c\u4ee5\u53ca\u517c\u5bb9\u65e7\u5e94\u7528\u7248\u672c\u7684\u8981\u6c42\u3002\n- AGY \u81ea\u68c0\uff1a\u8fc1\u79fb up/down \u6216\u7b49\u4ef7\u6d41\u7a0b\u3001\u7a7a\u5e93\u8fc1\u79fb\u3001\u5df2\u6709\u6570\u636e\u5347\u7ea7\u3001schema/\u8fc1\u79fb\u6d4b\u8bd5\u3002\n- \u4e3b Codex \u95e8\u7981\uff1a\u5bf9\u7167\u57fa\u7ebf\u68c0\u67e5\u5b9e\u9645 diff\uff1b\u786e\u8ba4\u7528\u6237\u539f\u6539\u52a8\u9010\u5b57\u4fdd\u7559\uff1b\u5ba1\u67e5\u8fc1\u79fb\u7684\u9501\u8868/\u6570\u636e\u4e22\u5931\u98ce\u9669\u3001\u5e42\u7b49\u6027\u548c\u56de\u6eda\uff1b\u4eb2\u81ea\u8fd0\u884c\u6700\u5c0f\u8fc1\u79fb\u6d4b\u8bd5\u3002\u53ea\u6709\u6570\u636e\u5e93\u5951\u7ea6\u548c\u5b57\u6bb5\u8bed\u4e49\u56fa\u5b9a\u540e\u624d\u8fdb\u5165\u9636\u6bb5 B\u3002\n\n### \u9636\u6bb5 B\uff1a\u540e\u7aef\u63a5\u53e3\u9002\u914d\n\n\u59d4\u6d3e\u76ee\u6807\uff1a\u57fa\u4e8e\u9636\u6bb5 A \u5df2\u9a8c\u6536\u7684\u5b57\u6bb5\u5951\u7ea6\uff0c\u66f4\u65b0\u6301\u4e45\u5316\u6620\u5c04\u3001\u6821\u9a8c\u3001\u670d\u52a1\u903b\u8f91\u3001\u8bf7\u6c42/\u54cd\u5e94 DTO \u548c\u63a5\u53e3\u6d4b\u8bd5\uff0c\u540c\u65f6\u7ef4\u6301\u7ea6\u5b9a\u7684\u517c\u5bb9\u7b56\u7565\u3002\n\n- \u5141\u8bb8\u8303\u56f4\uff1a\u8be5\u63a5\u53e3\u76f4\u63a5\u76f8\u5173\u7684\u540e\u7aef controller/handler\u3001DTO\u3001service\u3001repository/model \u4e0e\u6d4b\u8bd5\uff1b\u4e0d\u5f97\u4fee\u6539\u8fc1\u79fb\u548c\u524d\u7aef\u6587\u4ef6\u3002\n- \u63d0\u793a\u8bcd\u8f93\u5165\uff1a\u5df2\u9a8c\u6536\u5b57\u6bb5\u540d\u3001\u7c7b\u578b\u3001null/default \u8bed\u4e49\u3001\u5e8f\u5217\u5316\u683c\u5f0f\u3001\u9519\u8bef\u54cd\u5e94\u548c\u5411\u540e\u517c\u5bb9\u89c4\u5219\u3002\n- AGY \u81ea\u68c0\uff1a\u540e\u7aef\u5355\u5143/\u96c6\u6210\u6d4b\u8bd5\uff0c\u81f3\u5c11\u8986\u76d6\u5b57\u6bb5\u7f3a\u7701\u3001\u5408\u6cd5\u503c\u3001\u975e\u6cd5\u503c\u3001\u8bfb\u56de\u4e00\u81f4\u6027\u53ca\u65e7\u8bf7\u6c42\u517c\u5bb9\u3002\n- \u4e3b Codex \u95e8\u7981\uff1a\u5ba1\u67e5 API \u5951\u7ea6\u3001\u9a8c\u8bc1\u903b\u8f91\u548c\u6570\u636e\u5e93\u6620\u5c04\uff1b\u68c0\u67e5\u662f\u5426\u51fa\u73b0\u8d8a\u754c\u91cd\u6784\uff1b\u4eb2\u81ea\u8fd0\u884c\u76f8\u5173\u540e\u7aef\u6d4b\u8bd5\u5e76\u67e5\u770b\u5b9e\u9645 diff\u3002\u5c06\u6700\u7ec8\u8bf7\u6c42/\u54cd\u5e94\u6837\u4f8b\u56fa\u5316\u4e3a\u9636\u6bb5 C \u7684\u552f\u4e00\u63a5\u53e3\u5951\u7ea6\u3002\n\n### \u9636\u6bb5 C\uff1a\u524d\u7aef\u8868\u5355\u66f4\u65b0\n\n\u59d4\u6d3e\u76ee\u6807\uff1a\u4e25\u683c\u6309\u9636\u6bb5 B \u7684\u5df2\u9a8c\u6536\u63a5\u53e3\u5951\u7ea6\u66f4\u65b0\u8868\u5355\u63a7\u4ef6\u3001\u521d\u59cb\u503c\u3001\u5ba2\u6237\u7aef\u6821\u9a8c\u3001\u63d0\u4ea4\u8f7d\u8377\u3001\u7f16\u8f91\u56de\u586b\u3001\u9519\u8bef\u63d0\u793a\u548c\u76f8\u5173\u7ec4\u4ef6\u6d4b\u8bd5\u3002\n\n- \u5141\u8bb8\u8303\u56f4\uff1a\u76ee\u6807\u8868\u5355\u7ec4\u4ef6\u3001\u76f4\u63a5\u76f8\u5173\u7684\u7c7b\u578b/API client\u3001\u6587\u6848\u548c\u6d4b\u8bd5\uff1b\u4e0d\u5f97\u6539\u6570\u636e\u5e93\u8fc1\u79fb\u6216\u540e\u7aef\u5b9e\u73b0\u3002\n- \u63d0\u793a\u8bcd\u8f93\u5165\uff1a\u540e\u7aef\u6700\u7ec8\u5b57\u6bb5\u540d\u3001\u53ef\u9009\u6027\u3001\u683c\u5f0f\u3001\u5408\u6cd5\u8303\u56f4\u3001\u9519\u8bef\u7ed3\u6784\uff0c\u4ee5\u53ca\u9879\u76ee\u73b0\u6709 UI/\u53ef\u8bbf\u95ee\u6027\u89c4\u8303\u3002\n- AGY \u81ea\u68c0\uff1a\u65b0\u589e\u3001\u7f16\u8f91\u3001\u6e05\u7a7a/\u7f3a\u7701\u3001\u6821\u9a8c\u5931\u8d25\u3001\u540e\u7aef\u9519\u8bef\u5c55\u793a\u548c\u6210\u529f\u63d0\u4ea4\u7b49\u7ec4\u4ef6\u6d4b\u8bd5\uff1b\u82e5\u9879\u76ee\u6709\u7c7b\u578b\u68c0\u67e5\u4e0e lint\uff0c\u4e5f\u8fd0\u884c\u805a\u7126\u68c0\u67e5\u3002\n- \u4e3b Codex \u95e8\u7981\uff1a\u68c0\u67e5\u8868\u5355\u72b6\u6001\u4e0e API payload \u4e00\u81f4\uff0c\u786e\u8ba4\u6ca1\u6709\u786c\u7f16\u7801\u65e7\u5951\u7ea6\uff0c\u68c0\u67e5\u952e\u76d8\u64cd\u4f5c\u3001label/error \u5173\u8054\u548c\u52a0\u8f7d\u72b6\u6001\uff1b\u4eb2\u81ea\u8fd0\u884c\u524d\u7aef\u6d4b\u8bd5\u3001\u7c7b\u578b\u68c0\u67e5\uff0c\u5e76\u6838\u5bf9 diff \u4e0e\u7528\u6237\u539f\u6539\u52a8\u3002\n\n### \u9636\u6bb5 D\uff1a\u7aef\u5230\u7aef\u9a8c\u8bc1\n\n\u5148\u4f7f\u7528\u4e00\u4e2a\u72ec\u7acb\u7684 AGY \u53ea\u8bfb\u5ba1\u67e5\u4f1a\u8bdd\uff08`--mode plan`\uff09\u6838\u5bf9 A-C \u7684\u5b8c\u6574\u5951\u7ea6\u94fe\u5e76\u5217\u51fa E2E \u573a\u666f\u3002\u4e3b Codex \u5ba1\u6838\u573a\u666f\u540e\uff0c\u518d\u5f00\u542f\u5b9e\u73b0\u4f1a\u8bdd\uff0c\u4ec5\u5141\u8bb8\u4fee\u6539 E2E \u6d4b\u8bd5\u53ca\u5176\u5fc5\u8981 fixture\u3002\n\nE2E \u81f3\u5c11\u9a8c\u8bc1\uff1a\n\n1. \u5728\u771f\u5b9e\u6d4b\u8bd5\u6570\u636e\u5e93\u4e0a\u5e94\u7528\u8fc1\u79fb\uff1b\n2. \u901a\u8fc7 UI \u65b0\u5efa\u5e26\u65b0\u5b57\u6bb5\u7684\u6570\u636e\u5e76\u89c2\u5bdf\u6210\u529f\u72b6\u6001\uff1b\n3. \u4ece\u540e\u7aef/\u6570\u636e\u5e93\u8bfb\u56de\u5e76\u786e\u8ba4\u503c\u4e0e\u7c7b\u578b\u4e00\u81f4\uff1b\n4. \u5237\u65b0\u6216\u91cd\u65b0\u8fdb\u5165\u7f16\u8f91\u9875\uff0c\u786e\u8ba4\u56de\u586b\uff1b\n5. \u4fee\u6539\u5e76\u4fdd\u5b58\uff0c\u786e\u8ba4\u66f4\u65b0\u6301\u4e45\u5316\uff1b\n6. \u8986\u76d6\u7f3a\u7701\u503c\u3001\u975e\u6cd5\u8f93\u5165\u4e0e\u670d\u52a1\u7aef\u9519\u8bef\u8def\u5f84\uff1b\n7. \u5728\u517c\u5bb9\u7b56\u7565\u8981\u6c42\u4e0b\u9a8c\u8bc1\u65e7\u6570\u636e\u6216\u65e7\u8bf7\u6c42\u3002\n\n\u4e3b Codex\u8d1f\u8d23\u542f\u52a8\u9879\u76ee\u6240\u9700\u670d\u52a1\u3001\u4eb2\u81ea\u8fd0\u884c E2E\u3001\u68c0\u67e5\u6d4f\u89c8\u5668\u63a7\u5236\u53f0\u548c\u670d\u52a1\u7aef\u65e5\u5fd7\uff0c\u5e76\u4ee5\u6700\u7ec8\u5e73\u53f0/\u6570\u636e\u5e93\u72b6\u6001\u5224\u5b9a\u6210\u529f\uff0c\u4e0d\u628a\u201c\u70b9\u51fb\u5b8c\u6210\u201d\u6216 AGY \u7684\u6587\u5b57\u62a5\u544a\u5f53\u6210\u6210\u529f\u8bc1\u636e\u3002\n\n## 5. \u6bcf\u4e00\u6b65\u7684\u56fa\u5b9a\u5ba1\u67e5\u95e8\n\n\u6bcf\u4e2a AGY \u4f1a\u8bdd\u8fd4\u56de\u540e\uff0c\u4e3b Codex\u6309\u76f8\u540c\u987a\u5e8f\u9a8c\u6536\uff1a\n\n1. \u6bd4\u8f83 `git status` \u4e0e\u6267\u884c\u524d\u57fa\u7ebf\uff0c\u533a\u5206\u7528\u6237\u539f\u6539\u52a8\u548c\u672c\u9636\u6bb5\u65b0\u589e\u6539\u52a8\u3002\n2. \u6838\u5bf9\u6240\u6709\u65b0\u589e\u53d8\u66f4\u90fd\u4f4d\u4e8e\u5141\u8bb8\u8303\u56f4\uff1b\u53d1\u73b0\u8d8a\u754c\u7acb\u5373\u963b\u6b62\u540e\u7eed\u6b65\u9aa4\u3002\n3. \u9605\u8bfb\u5b8c\u6574 diff\uff0c\u68c0\u67e5\u6b63\u786e\u6027\u3001\u6700\u5c0f\u6027\u3001\u6570\u636e/API \u517c\u5bb9\u6027\u548c\u662f\u5426\u6df7\u5165\u65e0\u5173\u683c\u5f0f\u5316\u3002\n4. \u72ec\u7acb\u8fd0\u884c\u8be5\u9636\u6bb5\u7ea6\u5b9a\u7684\u6d4b\u8bd5\uff0c\u4e0d\u63a5\u53d7\u53ea\u8f6c\u8ff0 AGY \u7684\u6d4b\u8bd5\u7ed3\u8bba\u3002\n5. \u68c0\u67e5 AGY \u62a5\u544a\u4e0e\u771f\u5b9e\u6587\u4ef6\u3001\u547d\u4ee4\u8f93\u51fa\u4e00\u81f4\u3002\n6. \u786e\u8ba4\u7528\u6237\u539f\u6709\u672a\u63d0\u4ea4\u6539\u52a8\u6ca1\u6709\u88ab\u5220\u9664\u3001\u8986\u76d6\u6216\u91cd\u5199\u3002\n7. \u8bb0\u5f55\u901a\u8fc7\u7684\u4ea7\u7269\u3001\u5951\u7ea6\u548c\u6d4b\u8bd5\u8bc1\u636e\uff0c\u4f5c\u4e3a\u4e0b\u4e00\u6b65\u4e0d\u53ef\u64c5\u81ea\u66f4\u6539\u7684\u8f93\u5165\u3002\n\n## 6. \u8fd4\u5de5\u3001\u5931\u8d25\u4e0e\u63a5\u7ba1\n\n- \u5ba1\u67e5\u672a\u901a\u8fc7\u65f6\uff0c\u4f7f\u7528\u539f `conversation_id` \u6062\u590d\u540c\u4e00\u4f1a\u8bdd\uff1a\n\n  ```powershell\n  agy --conversation <CONVERSATION_ID> --print \"<\u5177\u4f53\u5dee\u5f02\u3001\u5931\u8d25\u8f93\u51fa\u3001\u5141\u8bb8\u8303\u56f4\u548c\u4e0d\u53d8\u7684\u9a8c\u6536\u6761\u4ef6>\" --model <SAME_LIVE_MODEL_SLUG> --mode accept-edits --output-format json\n  ```\n\n- \u6bcf\u6b21\u53ea\u53cd\u9988\u53ef\u590d\u73b0\u7684\u5177\u4f53\u95ee\u9898\uff0c\u4e0d\u6269\u5927\u6587\u4ef6\u8303\u56f4\uff1b\u8fd4\u5de5\u540e\u4ece\u5934\u6267\u884c\u8be5\u9636\u6bb5\u5ba1\u67e5\u95e8\u3002\n- \u540c\u4e00\u7f3a\u9677\u6700\u591a\u5141\u8bb8\u4e24\u8f6e AGY \u8fd4\u5de5\u3002\u4ecd\u4e0d\u5408\u683c\u3001\u6301\u7eed\u8d8a\u754c\u6216\u6a21\u578b\u4e0d\u53ef\u7528\u65f6\uff0c\u505c\u6b62\u59d4\u6d3e\uff0c\u7531\u4e3b Codex\u63a5\u7ba1\u6700\u5c0f\u5fc5\u8981\u4fee\u6b63\uff1b\u5728\u672c\u6b21\u201c\u4ec5\u8f93\u51fa\u65b9\u6848\u201d\u7684\u573a\u666f\u4e2d\u53ea\u8bb0\u5f55\u8be5\u63a5\u7ba1\u51b3\u7b56\uff0c\u4e0d\u5b9e\u65bd\u3002\n- \u6a21\u578b slug \u5931\u6548\u65f6\u91cd\u65b0\u8fd0\u884c `agy models`\uff0c\u660e\u786e\u8bb0\u5f55\u6362\u7528\u7684\u6a21\u578b\u53ca\u7406\u7531\uff1b\u8ba4\u8bc1\u3001\u6743\u9650\u3001\u8d85\u65f6\u6216 JSON \u9519\u8bef\u8981\u4fdd\u7559\u73b0\u573a\uff0c\u5148\u68c0\u67e5\u5de5\u4f5c\u533a\u662f\u5426\u5df2\u6709\u90e8\u5206\u5199\u5165\uff0c\u518d\u51b3\u5b9a\u6062\u590d\u4f1a\u8bdd\u6216\u505c\u6b62\u3002\n- \u4efb\u4e00\u6b65\u5931\u8d25\u90fd\u4e0d\u4f1a\u7ee7\u7eed\u4e0b\u6e38\u6b65\u9aa4\uff0c\u56e0\u4e3a\u540e\u7eed\u5b9e\u73b0\u4f9d\u8d56\u4e0a\u4e00\u9636\u6bb5\u5df2\u7ecf\u9a8c\u6536\u7684\u5951\u7ea6\u3002\n\n## 7. \u6700\u7ec8\u6574\u4f53\u9a8c\u6536\u4e0e\u4ea4\u4ed8\u8bc1\u636e\n\nA-D \u5747\u901a\u8fc7\u540e\uff0c\u4e3b Codex\u8fdb\u884c\u4e00\u6b21\u5168\u5c40\u9a8c\u6536\uff1a\n\n- \u6838\u5bf9\u6700\u7ec8\u5b8c\u6574 diff \u4e0e\u7528\u6237\u521d\u59cb\u57fa\u7ebf\uff0c\u786e\u8ba4\u539f\u6709\u6539\u52a8\u4ecd\u4fdd\u7559\u4e14\u6240\u6709\u65b0\u589e\u6587\u4ef6\u5747\u5728\u4efb\u52a1\u8303\u56f4\u5185\uff1b\n- \u4ece\u7a7a\u5e93\u548c\u5e26\u5386\u53f2\u6570\u636e\u7684\u6570\u636e\u5e93\u5206\u522b\u9a8c\u8bc1\u8fc1\u79fb\u4e0e\u56de\u6eda\uff1b\n- \u8fd0\u884c\u540e\u7aef\u5168\u91cf\u76f8\u5173\u6d4b\u8bd5\u3001\u524d\u7aef\u6d4b\u8bd5/\u7c7b\u578b\u68c0\u67e5/\u6784\u5efa\u548c\u5b8c\u6574 E2E\uff1b\n- \u68c0\u67e5\u6570\u636e\u5e93\u5b57\u6bb5\u3001\u540e\u7aef DTO\u3001\u524d\u7aef\u7c7b\u578b\u3001\u8868\u5355 payload \u548c\u56de\u586b\u5c55\u793a\u4f7f\u7528\u540c\u4e00\u5951\u7ea6\uff1b\n- \u6c47\u603b\u6bcf\u4e2a AGY \u4f1a\u8bdd ID\u3001\u6a21\u578b\u3001\u53d8\u66f4\u6587\u4ef6\u3001\u9a8c\u8bc1\u547d\u4ee4\u3001\u5b9e\u9645\u7ed3\u679c\u3001\u8fd4\u5de5\u6b21\u6570\u548c\u5269\u4f59\u98ce\u9669\u3002\n\n\u53ea\u6709\u4e0a\u8ff0\u8bc1\u636e\u5168\u90e8\u6210\u7acb\uff0c\u4e3b Codex\u624d\u62a5\u544a\u4efb\u52a1\u5b8c\u6210\u3002\u4efb\u4f55\u672a\u8fd0\u884c\u3001\u8df3\u8fc7\u6216\u53d7\u73af\u5883\u963b\u585e\u7684\u9a8c\u8bc1\u90fd\u5e94\u660e\u786e\u6807\u6ce8\uff0c\u4e0d\u80fd\u7528 AGY \u7684 `SUCCESS` \u72b6\u6001\u66ff\u4ee3\u3002\n"}], "grading": {"expectations": [{"text": "\u9009\u62e9\u5de5\u4f5c\u6a21\u578b\u524d\u660e\u786e\u8fd0\u884c agy models \u83b7\u53d6\u5b9e\u65f6\u6a21\u578b\u5217\u8868", "passed": true, "evidence": "\u7b2c 2 \u8282\u7b2c 2 \u9879\u660e\u786e\u5148\u8fd0\u884c agy models\uff0c\u5e76\u8bf4\u660e\u4e0d\u4f9d\u8d56\u8bb0\u5fc6\u4e2d\u7684\u6a21\u578b\u540d\u79f0\u3002"}, {"text": "\u6309\u6570\u636e\u5e93\u3001\u540e\u7aef\u3001\u524d\u7aef\u3001\u7aef\u5230\u7aef\u9a8c\u8bc1\u7684\u4f9d\u8d56\u987a\u5e8f\u4e32\u884c\u6267\u884c", "passed": true, "evidence": "\u7b2c 4 \u8282\u6309 A \u5230 D \u660e\u786e\u7ed9\u51fa\u6570\u636e\u5e93\u3001\u540e\u7aef\u3001\u524d\u7aef\u3001\u7aef\u5230\u7aef\u7684\u4e32\u884c\u9636\u6bb5\u3002"}, {"text": "\u6bcf\u4e00\u6b65\u90fd\u5305\u542b\u4e3b\u6a21\u578b\u4eb2\u81ea\u68c0\u67e5 diff \u548c\u6d4b\u8bd5\u7684\u9a8c\u6536\u95e8", "passed": true, "evidence": "\u56db\u4e2a\u9636\u6bb5\u5747\u6709\u4e3b Codex \u95e8\u7981\uff0c\u7b2c 5 \u8282\u8fd8\u5b9a\u4e49\u4e86\u56fa\u5b9a\u5ba1\u67e5\u95e8\u3002"}, {"text": "\u660e\u786e\u4fdd\u7559\u7528\u6237\u5df2\u6709\u672a\u63d0\u4ea4\u6539\u52a8", "passed": true, "evidence": "\u7b2c 2 \u8282\u8bb0\u5f55\u7528\u6237\u539f\u6709\u6539\u52a8\u6e05\u5355\u5e76\u8981\u6c42\u5168\u7a0b\u4fdd\u7559\u3002"}, {"text": "\u4fdd\u5b58 conversation_id\uff0c\u4ee5\u4fbf\u5ba1\u67e5\u5931\u8d25\u540e\u5728\u540c\u4e00 AGY \u4f1a\u8bdd\u8fd4\u5de5", "passed": true, "evidence": "\u7b2c 3 \u8282\u8981\u6c42\u4fdd\u5b58 conversation_id\uff0c\u7b2c 6 \u8282\u7ed9\u51fa\u540c\u4f1a\u8bdd\u8fd4\u5de5\u547d\u4ee4\u3002"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "simple-task-with_skill", "prompt": "\u8bf7\u4f7f\u7528 agy-orchestrator\uff0c\u628a README \u91cc\u7684\u4e00\u4e2a\u9519\u522b\u5b57\u6539\u6389\u3002\u53ea\u8f93\u51fa\u6267\u884c\u65b9\u6848\uff0c\u4e0d\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u3002", "eval_id": 2, "outputs": [{"name": "result.md", "type": "text", "content": "# README \u9519\u522b\u5b57\u4fee\u8ba2\u6267\u884c\u65b9\u6848\n\n## \u7f16\u6392\u5224\u65ad\n\n\u8be5\u4efb\u52a1\u53ea\u5305\u542b\u4e00\u6b21\u53ef\u9a8c\u6536\u7684\u673a\u68b0\u6587\u672c\u4fee\u8ba2\uff0c\u4e0d\u6ee1\u8db3 `agy-orchestrator` \u8981\u6c42\u7684\u201c\u81f3\u5c11\u4e24\u4e2a\u5177\u6709\u72ec\u7acb\u7ed3\u679c\u548c\u9a8c\u6536\u6761\u4ef6\u7684\u6b65\u9aa4\u201d\u3002\u56e0\u6b64\u7531\u4e3b\u6a21\u578b\u76f4\u63a5\u5b8c\u6210\uff0c\u4e0d\u8c03\u7528 `agy`\uff0c\u4e5f\u4e0d\u8fd0\u884c `agy models`\u3002\n\n## \u6267\u884c\u6b65\u9aa4\n\n1. \u8bfb\u53d6\u4ed3\u5e93\u6307\u4ee4\u5e76\u8bb0\u5f55\u5f53\u524d\u5206\u652f\u3001`git status --short`\u3001\u5df2\u6709 diff \u548c\u672a\u8ddf\u8e2a\u6587\u4ef6\uff0c\u4fdd\u5b58\u7528\u6237\u539f\u6709\u6539\u52a8\u57fa\u7ebf\u3002\n2. \u5b9a\u4f4d\u76ee\u6807 `README`\uff0c\u8bfb\u53d6\u9519\u522b\u5b57\u6240\u5728\u4e0a\u4e0b\u6587\u5e76\u786e\u8ba4\u552f\u4e00\u7684\u201c\u539f\u6587 \u2192 \u6b63\u786e\u6587\u672c\u201d\u66ff\u6362\uff1b\u82e5\u5b58\u5728\u591a\u4e2a\u5019\u9009 README \u6216\u65e0\u6cd5\u552f\u4e00\u786e\u8ba4\u9519\u5b57\uff0c\u5219\u5148\u8bf7\u6c42\u7528\u6237\u6307\u5b9a\uff0c\u4e0d\u731c\u6d4b\u3002\n3. \u4f7f\u7528\u6700\u5c0f\u8865\u4e01\u53ea\u66ff\u6362\u8be5\u5904\u9519\u522b\u5b57\uff0c\u4fdd\u6301\u6587\u4ef6\u7f16\u7801\u3001\u6362\u884c\u3001\u6392\u7248\u53ca\u5176\u4ed6\u5185\u5bb9\u4e0d\u53d8\u3002\n4. \u7531\u4e3b\u6a21\u578b\u4eb2\u81ea\u68c0\u67e5\u76ee\u6807\u6587\u4ef6\u5b8c\u6574 diff\uff0c\u786e\u8ba4\u76f8\u5bf9\u57fa\u7ebf\u4ec5\u65b0\u589e\u9884\u671f\u7684\u4e00\u5904\u6587\u5b57\u53d8\u5316\uff1b\u91cd\u65b0\u8bfb\u53d6\u4fee\u6539\u540e\u7684\u4e0a\u4e0b\u6587\uff0c\u5e76\u641c\u7d22\u539f\u9519\u5b57\uff0c\u9a8c\u8bc1\u4fee\u8ba2\u751f\u6548\u4e14\u672a\u8bef\u66ff\u6362\u3002\n5. \u4ea4\u4ed8\u65f6\u62a5\u544a\u76ee\u6807\u6587\u4ef6\u3001\u5177\u4f53\u66ff\u6362\u548c\u5b9e\u9645\u6821\u9a8c\u7ed3\u679c\uff0c\u540c\u65f6\u786e\u8ba4\u7528\u6237\u539f\u6709\u6539\u52a8\u4fdd\u6301\u5b8c\u6574\u3002\n\n## \u672c\u8f6e\u8fb9\u754c\n\n\u672c\u8f6e\u53ea\u8f93\u51fa\u6267\u884c\u65b9\u6848\uff0c\u4e0d\u6267\u884c\u4e0a\u8ff0\u4fee\u8ba2\uff0c\u4e0d\u4fee\u6539\u4efb\u4f55 README \u6216\u5176\u4ed6\u9879\u76ee\u6587\u4ef6\u3002\n"}], "grading": {"expectations": [{"text": "\u628a\u4efb\u52a1\u5224\u65ad\u4e3a\u4e0d\u6ee1\u8db3\u81f3\u5c11\u4e24\u4e2a\u53ef\u9a8c\u6536\u6b65\u9aa4\u7684\u590d\u6742\u5ea6\u95e8\u69db", "passed": true, "evidence": "\u5f00\u5934\u660e\u786e\u5224\u5b9a\u53ea\u6709\u4e00\u6b21\u673a\u68b0\u6587\u672c\u4fee\u8ba2\u3002"}, {"text": "\u660e\u786e\u7531\u4e3b\u6a21\u578b\u76f4\u63a5\u5b8c\u6210", "passed": true, "evidence": "\u660e\u786e\u7531\u4e3b\u6a21\u578b\u76f4\u63a5\u5904\u7406\u3002"}, {"text": "\u65b9\u6848\u4e2d\u4e0d\u8c03\u7528 agy", "passed": true, "evidence": "\u660e\u786e\u4e0d\u8c03\u7528 agy\uff0c\u4e5f\u4e0d\u8fd0\u884c agy models\u3002"}], "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}}}, {"id": "simple-task-without_skill", "prompt": "\u8bf7\u4f7f\u7528 agy-orchestrator\uff0c\u628a README \u91cc\u7684\u4e00\u4e2a\u9519\u522b\u5b57\u6539\u6389\u3002\u53ea\u8f93\u51fa\u6267\u884c\u65b9\u6848\uff0c\u4e0d\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u3002", "eval_id": 2, "outputs": [{"name": "result.md", "type": "text", "content": "# README \u9519\u522b\u5b57\u4fee\u8ba2\u6267\u884c\u65b9\u6848\n\n## \u7f16\u6392\u5224\u65ad\n\n\u8fd9\u662f\u4e00\u4e2a\u5355\u6587\u4ef6\u3001\u5355\u5904\u6587\u672c\u66ff\u6362\u7684\u7b80\u5355\u4efb\u52a1\uff0c\u6ca1\u6709\u53ef\u5e76\u884c\u7684\u72ec\u7acb\u5b50\u4efb\u52a1\uff0c\u4e5f\u4e0d\u5b58\u5728\u9700\u8981\u8de8\u6a21\u578b\u534f\u8c03\u7684\u4f9d\u8d56\u94fe\u3002`agy-orchestrator` \u5e94\u5c06\u5b83\u8def\u7531\u4e3a\u4e3b\u6a21\u578b\u672c\u5730\u4e00\u6b65\u6267\u884c\uff0c\u4e0d\u542f\u52a8 AGY \u59d4\u6d3e\uff0c\u907f\u514d\u8ba9\u7f16\u6392\u6210\u672c\u8d85\u8fc7\u4fee\u6539\u672c\u8eab\u3002\n\n## \u6267\u884c\u6b65\u9aa4\n\n1. \u53ea\u8bfb\u68c0\u67e5\u4ed3\u5e93\u72b6\u6001\u5e76\u5b9a\u4f4d\u76ee\u6807 `README` \u6587\u4ef6\uff0c\u540c\u65f6\u8bb0\u5f55\u73b0\u6709\u672a\u63d0\u4ea4\u6539\u52a8\uff1b\u4e0d\u6682\u5b58\u3001\u4e0d\u91cd\u7f6e\u3001\u4e0d\u8986\u76d6\u7528\u6237\u5df2\u6709\u4fee\u6539\u3002\n2. \u8bfb\u53d6\u76ee\u6807\u4f4d\u7f6e\u7684\u4e0a\u4e0b\u6587\uff0c\u786e\u8ba4\u9519\u522b\u5b57\u3001\u6b63\u786e\u5199\u6cd5\u53ca\u66ff\u6362\u8303\u56f4\u3002\u82e5\u4ed3\u5e93\u5185\u6709\u591a\u4e2a `README`\uff0c\u5148\u4f9d\u636e\u4efb\u52a1\u4e0a\u4e0b\u6587\u9501\u5b9a\u552f\u4e00\u76ee\u6807\uff1b\u82e5\u4ecd\u4e0d\u552f\u4e00\uff0c\u5219\u6682\u505c\u5e76\u8bf7\u7528\u6237\u6307\u5b9a\u6587\u4ef6\u3002\u82e5\u627e\u4e0d\u5230\u53ef\u786e\u8ba4\u7684\u9519\u522b\u5b57\uff0c\u4e5f\u6682\u505c\u800c\u4e0d\u731c\u6d4b\u4fee\u6539\u3002\n3. \u4f7f\u7528\u6700\u5c0f\u8865\u4e01\u4ec5\u66ff\u6362\u8be5\u5904\u9519\u522b\u5b57\uff0c\u4e0d\u8c03\u6574\u6392\u7248\u3001\u6362\u884c\u3001\u7f16\u7801\u6216\u65e0\u5173\u63aa\u8f9e\u3002\n4. \u67e5\u770b\u76ee\u6807\u6587\u4ef6\u7684\u7cbe\u786e diff\uff0c\u9a8c\u8bc1\u53ea\u6709\u9884\u671f\u7684\u4e00\u5904\u6587\u672c\u53d8\u5316\uff1b\u968f\u540e\u91cd\u65b0\u641c\u7d22\u539f\u9519\u5b57\uff0c\u5e76\u8bfb\u53d6\u4fee\u6539\u540e\u7684\u4e0a\u4e0b\u6587\uff0c\u786e\u8ba4\u6b63\u786e\u5199\u6cd5\u5df2\u751f\u6548\u4e14\u6ca1\u6709\u8bef\u66ff\u6362\u3002\n5. \u6700\u7ec8\u62a5\u544a\u76ee\u6807\u6587\u4ef6\u3001\u539f\u6587\u4e0e\u4fee\u8ba2\u6587\u672c\uff0c\u4ee5\u53ca diff \u6821\u9a8c\u7ed3\u679c\uff1b\u4e0d\u4ee5\u7f16\u6392\u5668\u6216\u6267\u884c\u5668\u7684\u81ea\u62a5\u6210\u529f\u4ee3\u66ff\u4e3b\u6a21\u578b\u9a8c\u6536\u3002\n\n## \u672c\u8f6e\u8fb9\u754c\n\n\u672c\u8f6e\u53ea\u4ea7\u51fa\u65b9\u6848\uff0c\u4e0d\u6267\u884c\u4e0a\u8ff0\u6b65\u9aa4\uff0c\u4e0d\u4fee\u6539\u4efb\u4f55 `README` \u6216\u5176\u4ed6\u9879\u76ee\u6587\u4ef6\u3002\n"}], "grading": {"expectations": [{"text": "\u628a\u4efb\u52a1\u5224\u65ad\u4e3a\u4e0d\u6ee1\u8db3\u81f3\u5c11\u4e24\u4e2a\u53ef\u9a8c\u6536\u6b65\u9aa4\u7684\u590d\u6742\u5ea6\u95e8\u69db", "passed": true, "evidence": "\u7f16\u6392\u5224\u65ad\u660e\u786e\u6307\u51fa\u8fd9\u662f\u5355\u6587\u4ef6\u3001\u5355\u5904\u66ff\u6362\u7684\u4e00\u6b65\u4efb\u52a1\u3002"}, {"text": "\u660e\u786e\u7531\u4e3b\u6a21\u578b\u76f4\u63a5\u5b8c\u6210", "passed": true, "evidence": "\u660e\u786e\u8def\u7531\u4e3a\u4e3b\u6a21\u578b\u672c\u5730\u4e00\u6b65\u6267\u884c\u3002"}, {"text": "\u65b9\u6848\u4e2d\u4e0d\u8c03\u7528 agy", "passed": true, "evidence": "\u660e\u786e\u4e0d\u542f\u52a8 AGY \u59d4\u6d3e\u3002"}], "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}}}, {"id": "parallel-conflict-with_skill", "prompt": "\u4e3a\u4e86\u8d76\u65f6\u95f4\uff0c\u8bf7\u7528 agy \u540c\u65f6\u6267\u884c\u4e09\u4e2a\u5b50\u4efb\u52a1\uff1a\u4fee\u6539\u540c\u4e00\u4e2a\u914d\u7f6e\u6587\u4ef6\u3001\u4fee\u6539\u8bfb\u53d6\u8be5\u914d\u7f6e\u7684\u540e\u7aef\u6a21\u5757\u3001\u4fee\u6539\u4f9d\u8d56\u540e\u7aef\u8fd4\u56de\u7684\u524d\u7aef\u7ec4\u4ef6\u3002\u53ea\u8f93\u51fa\u7f16\u6392\u65b9\u6848\uff0c\u4e0d\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u3002", "eval_id": 3, "outputs": [{"name": "result.md", "type": "text", "content": "# AGY \u7f16\u6392\u65b9\u6848\uff1a\u5171\u4eab\u914d\u7f6e \u2192 \u540e\u7aef \u2192 \u524d\u7aef\n\n## \u7f16\u6392\u7ed3\u8bba\n\n\u8fd9\u4e09\u4e2a\u5199\u5165\u5b50\u4efb\u52a1\u4e0d\u5e76\u884c\u6267\u884c\uff0c\u987a\u5e8f\u56fa\u5b9a\u4e3a\uff1a\n\n1. \u4fee\u6539\u5e76\u9a8c\u6536\u5171\u4eab\u914d\u7f6e\u3002\n2. \u57fa\u4e8e\u5df2\u51bb\u7ed3\u7684\u914d\u7f6e\u5951\u7ea6\u4fee\u6539\u5e76\u9a8c\u6536\u540e\u7aef\u6a21\u5757\u3002\n3. \u57fa\u4e8e\u5df2\u51bb\u7ed3\u7684\u540e\u7aef\u54cd\u5e94\u5951\u7ea6\u4fee\u6539\u5e76\u9a8c\u6536\u524d\u7aef\u7ec4\u4ef6\u3002\n\n\u539f\u56e0\u662f\u540e\u7aef\u8bfb\u53d6\u5171\u4eab\u914d\u7f6e\uff0c\u524d\u7aef\u53c8\u4f9d\u8d56\u540e\u7aef\u8fd4\u56de\uff0c\u5b58\u5728\u660e\u786e\u7684\u6570\u636e\u4e0e\u63a5\u53e3\u4f9d\u8d56\uff1b\u5e76\u4e14\u201c\u4fee\u6539\u540c\u4e00\u4e2a\u914d\u7f6e\u6587\u4ef6\u201d\u8fd8\u9020\u6210\u5199\u5165\u96c6\u5408\u51b2\u7a81\u3002\u65f6\u95f4\u538b\u529b\u4e0d\u6539\u53d8\u5e76\u884c\u95e8\u3002\u5e76\u53d1\u5199\u5165\u4f1a\u8ba9\u540e\u7aef\u6216\u524d\u7aef\u5efa\u7acb\u5728\u5c1a\u672a\u9a8c\u6536\u7684\u5951\u7ea6\u4e0a\uff0c\u4e5f\u65e0\u6cd5\u53ef\u9760\u5f52\u5c5e\u540c\u4e00\u6587\u4ef6\u4e2d\u7684\u6539\u52a8\u3002\n\n\u4ec5\u5141\u8bb8\u628a\u4e09\u4e2a\u65b9\u5411\u7684**\u53ea\u8bfb\u8c03\u67e5**\u5e76\u884c\u5316\uff1b\u8c03\u67e5\u7ed3\u679c\u5fc5\u987b\u5148\u7531\u4e3b\u6a21\u578b\u6c47\u603b\uff0c\u786e\u5b9a\u7cbe\u786e\u6587\u4ef6\u3001\u6d4b\u8bd5\u5165\u53e3\u5e76\u51bb\u7ed3\u914d\u7f6e/API \u5951\u7ea6\uff0c\u4e4b\u540e\u624d\u8fdb\u5165\u4e0a\u8ff0\u4e32\u884c\u5199\u5165\u9636\u6bb5\u3002\u672c\u65b9\u6848\u672c\u8eab\u4e0d\u8c03\u7528 AGY \u5199\u6587\u4ef6\uff0c\u4e5f\u4e0d\u4fee\u6539\u4efb\u4f55\u9879\u76ee\u6587\u4ef6\u3002\n\n## \u6267\u884c\u524d\u786c\u95e8\n\n1. \u8bb0\u5f55\u4ed3\u5e93\u6307\u4ee4\u3001\u5f53\u524d\u5206\u652f\u3001`git status --short`\u3001\u5df2\u6709\u5b8c\u6574 diff\u3001\u672a\u8ddf\u8e2a\u6587\u4ef6\u53ca\u76f8\u5173\u6d4b\u8bd5\u72b6\u6001\uff0c\u5f62\u6210 `BASELINE`\u3002\u5f53\u524d\u57fa\u7ebf\u5df2\u6709\u7528\u6237\u6539\u52a8\uff0c\u6267\u884c\u65f6\u5168\u90e8\u89c6\u4e3a\u53d7\u4fdd\u62a4\u5185\u5bb9\uff0c\u4e0d\u8986\u76d6\u3001\u4e0d\u91cd\u6392\u3001\u4e0d\u987a\u624b\u6574\u7406\u3002\n2. \u6bcf\u6b21\u51c6\u5907\u8c03\u7528 AGY \u524d\u8fd0\u884c `agy models`\uff0c\u53ea\u4ece\u8be5\u6b21\u5b9e\u65f6\u8f93\u51fa\u4e2d\u9009\u8db3\u4ee5\u5b8c\u6210\u6b65\u9aa4\u7684\u6700\u4f4e\u6210\u672c\u6a21\u578b slug\u3002\u5f53\u524d\u9884\u68c0\u672a\u767b\u5f55\uff0c\u5b9e\u65f6\u5217\u8868\u4e3a\u7a7a\uff0c\u6240\u4ee5\u6b63\u5f0f\u6267\u884c\u5fc5\u987b\u5148\u6062\u590d AGY \u767b\u5f55\u5e76\u91cd\u65b0\u8fd0\u884c\u8be5\u547d\u4ee4\uff1b\u4e0d\u4f7f\u7528\u9759\u6001\u5feb\u7167\u731c\u6d4b slug\u3002\n3. \u901a\u8fc7\u53ea\u8bfb\u641c\u7d22\u89e3\u6790\u5e76\u586b\u5165\u4ee5\u4e0b\u7cbe\u786e\u503c\uff1a\n   - `CONFIG_FILE`\uff1a\u552f\u4e00\u5171\u4eab\u914d\u7f6e\u6587\u4ef6\uff1b\n   - `BACKEND_FILE_SET`\uff1a\u8bfb\u53d6\u8be5\u914d\u7f6e\u7684\u540e\u7aef\u5b9e\u73b0\u53ca\u5bf9\u5e94\u6d4b\u8bd5\uff1b\n   - `FRONTEND_FILE_SET`\uff1a\u6d88\u8d39\u540e\u7aef\u54cd\u5e94\u7684\u524d\u7aef\u7ec4\u4ef6\u53ca\u5bf9\u5e94\u6d4b\u8bd5\uff1b\n   - `CONFIG_TEST`\u3001`BACKEND_TEST`\u3001`FRONTEND_TEST`\u3001`E2E_CHECK`\uff1a\u4ed3\u5e93\u5df2\u6709\u7684\u6700\u5c0f\u76f8\u5173\u9a8c\u8bc1\u547d\u4ee4\u3002\n4. \u786e\u8ba4\u4e09\u4e2a\u5199\u5165\u96c6\u5408\u7cbe\u786e\u4e14\u4e92\u4e0d\u6df7\u7528\uff1a\u6b65\u9aa4 1 \u53ea\u5199 `CONFIG_FILE`\uff0c\u6b65\u9aa4 2 \u53ea\u5199 `BACKEND_FILE_SET`\uff0c\u6b65\u9aa4 3 \u53ea\u5199 `FRONTEND_FILE_SET`\u3002\u4efb\u4f55\u96c6\u5408\u4ecd\u4e0d\u660e\u786e\u65f6\uff0c\u7ee7\u7eed\u53ea\u8bfb\u8c03\u67e5\uff0c\u4e0d\u542f\u52a8\u5199\u5165\u3002\n\n\u53ef\u9009\u7684\u5e76\u884c\u53ea\u8bfb\u8c03\u67e5\u5747\u4f7f\u7528 `--mode plan --output-format json`\uff0c\u5206\u522b\u67e5\u6e05\u914d\u7f6e\u7ed3\u6784\u3001\u540e\u7aef\u8bfb\u53d6\u94fe\u548c\u524d\u7aef\u6d88\u8d39\u94fe\u3002\u4e3b\u6a21\u578b\u5ba1\u9605\u4e09\u4e2a JSON \u7ed3\u679c\u53ca\u4ee3\u7801\u5b9e\u51b5\u540e\uff0c\u4ea7\u51fa\u5e76\u51bb\u7ed3 `CONFIG_CONTRACT_V1`\u3001`BACKEND_RESPONSE_CONTRACT_V1` \u7684\u9884\u671f\u8349\u6848\uff1b\u8c03\u67e5\u4ee3\u7406\u65e0\u5199\u5165\u6743\u9650\u3002\n\n## \u6b65\u9aa4 1\uff1a\u914d\u7f6e\n\n\u8c03\u7528\u5f62\u5f0f\uff1a\n\n```powershell\nagy --model <LIVE_MODEL_SLUG> --mode accept-edits --output-format json --print \"<CONFIG_STEP_PROMPT>\"\n```\n\n\u6b65\u9aa4\u5408\u540c\uff1a\n\n```text\n\u76ee\u6807\uff1a\u5728 CONFIG_FILE \u4e2d\u5b8c\u6210\u9700\u6c42\u5bf9\u5e94\u7684\u6700\u5c0f\u914d\u7f6e\u53d8\u66f4\uff0c\u5e76\u7ed9\u51fa\u660e\u786e\u7684\u5b57\u6bb5\u540d\u3001\u7c7b\u578b\u3001\u9ed8\u8ba4\u503c\u3001\u5fc5\u586b\u6027\u548c\u517c\u5bb9\u884c\u4e3a\u3002\n\u4e0a\u4e0b\u6587\uff1aBASELINE\uff1b\u4e3b\u6a21\u578b\u6c47\u603b\u540e\u7684\u53ea\u8bfb\u8c03\u67e5\uff1b\u5f53\u524d\u914d\u7f6e\u683c\u5f0f\u548c\u52a0\u8f7d\u7ea6\u5b9a\u3002\n\u5141\u8bb8\u8bfb\u53d6\uff1aCONFIG_FILE\u3001\u914d\u7f6e\u52a0\u8f7d\u4ee3\u7801\u3001\u914d\u7f6e schema/\u7c7b\u578b\u5b9a\u4e49\u3001\u76f8\u5173\u914d\u7f6e\u6d4b\u8bd5\u4e0e\u793a\u4f8b\u3002\n\u5141\u8bb8\u5199\u5165\uff1a\u4ec5 CONFIG_FILE\uff08\u82e5 schema \u4e0e\u914d\u7f6e\u5fc5\u987b\u539f\u5b50\u66f4\u65b0\uff0c\u5e94\u5728\u5f00\u59cb\u524d\u628a\u7cbe\u786e schema \u6587\u4ef6\u52a0\u5165\u672c\u6b65\u9aa4\uff0c\u4e14\u4ece\u540e\u7eed\u6b65\u9aa4\u5199\u5165\u96c6\u5408\u4e2d\u79fb\u9664\uff09\u3002\n\u4fdd\u6301\u4e0d\u53d8\uff1aBASELINE \u4e2d\u7684\u7528\u6237\u5df2\u6709\u6539\u52a8\uff1bBACKEND_FILE_SET\u3001FRONTEND_FILE_SET\uff1b\u6240\u6709\u8303\u56f4\u5916\u6587\u4ef6\uff1b\u65e0\u5173\u914d\u7f6e\u952e\u4e0e\u516c\u5f00\u63a5\u53e3\u3002\n\u9a8c\u6536\uff1a\u8fd0\u884c\u914d\u7f6e\u89e3\u6790/\u6821\u9a8c\u547d\u4ee4 CONFIG_TEST\uff1b\u68c0\u67e5\u7f3a\u7701\u503c\u3001\u65e0\u6548\u503c\u548c\u517c\u5bb9\u8f93\u5165\uff1b\u786e\u8ba4 diff \u4ec5\u843d\u5728\u5141\u8bb8\u5199\u5165\u8303\u56f4\u3002\n\u8fd4\u56de\uff1a\u5b8c\u6210\u6458\u8981\u3001\u68c0\u67e5\u6587\u4ef6\u3001\u4fee\u6539\u6587\u4ef6\u3001\u547d\u4ee4\u4e0e\u7ed3\u679c\u3001\u6700\u7ec8 CONFIG_CONTRACT_V1\u3001\u9057\u7559\u95ee\u9898\u3001\u8d8a\u754c\u60c5\u51b5\u3002\n```\n\n\u4e3b\u6a21\u578b\u5ba1\u67e5\u95e8\uff1a\u89e3\u6790 JSON \u7684 `status`\u3001`error`\u3001`response` \u5e76\u4fdd\u5b58 `conversation_id`\uff1b\u76f8\u5bf9 `BASELINE` \u5217\u51fa\u65b0\u589e\u53d8\u66f4\uff1b\u9605\u8bfb\u5b8c\u6574 diff\uff1b\u6838\u5bf9\u8303\u56f4\u3001\u8fb9\u754c\u6761\u4ef6\u548c\u6700\u5c0f\u6027\uff1b\u4eb2\u81ea\u8fd0\u884c `CONFIG_TEST`\uff1b\u6838\u5bf9\u62a5\u544a\u4e0e\u771f\u5b9e\u5de5\u4f5c\u533a\uff1b\u786e\u8ba4\u7528\u6237\u539f\u6539\u52a8\u5b8c\u6574\u3002\u516d\u9879\u5747\u901a\u8fc7\u540e\u624d\u51bb\u7ed3 `CONFIG_CONTRACT_V1` \u5e76\u8fdb\u5165\u6b65\u9aa4 2\u3002\n\n## \u6b65\u9aa4 2\uff1a\u540e\u7aef\n\n\u8c03\u7528\u5f62\u5f0f\u540c\u4e0a\uff0c\u4f46\u4f7f\u7528\u65b0\u7684\u6b65\u9aa4\u4f1a\u8bdd\u548c\u540e\u7aef\u5408\u540c\u3002\n\n```text\n\u76ee\u6807\uff1a\u8ba9\u540e\u7aef\u6309\u5df2\u9a8c\u6536\u7684 CONFIG_CONTRACT_V1 \u8bfb\u53d6\u914d\u7f6e\uff0c\u5e76\u4ee5\u660e\u786e\u3001\u7a33\u5b9a\u7684\u54cd\u5e94\u5951\u7ea6\u8fd4\u56de\u524d\u7aef\u6240\u9700\u6570\u636e\u3002\n\u4e0a\u4e0b\u6587\uff1aBASELINE\uff1b\u5df2\u9a8c\u6536\u4e14\u4e0d\u53ef\u81ea\u884c\u6539\u5199\u7684 CONFIG_CONTRACT_V1\uff1b\u5f53\u524d\u540e\u7aef\u6280\u672f\u6808\u4e0e\u9519\u8bef\u5904\u7406\u7ea6\u5b9a\u3002\n\u5141\u8bb8\u8bfb\u53d6\uff1aCONFIG_FILE\u3001BACKEND_FILE_SET\u3001\u540e\u7aef\u8def\u7531/\u670d\u52a1/\u7c7b\u578b\u5b9a\u4e49\u53ca\u76f8\u5173\u6d4b\u8bd5\uff1b\u53ea\u8bfb\u67e5\u770b\u524d\u7aef\u6d88\u8d39\u70b9\u4ee5\u786e\u8ba4\u5951\u7ea6\u3002\n\u5141\u8bb8\u5199\u5165\uff1a\u4ec5\u9884\u5148\u5217\u660e\u7684 BACKEND_FILE_SET\u3002\n\u4fdd\u6301\u4e0d\u53d8\uff1aCONFIG_FILE\u3001CONFIG_CONTRACT_V1\u3001FRONTEND_FILE_SET\u3001\u7528\u6237\u5df2\u6709\u6539\u52a8\u3001\u65e0\u5173\u540e\u7aef\u63a5\u53e3\u548c\u8303\u56f4\u5916\u6587\u4ef6\u3002\n\u9a8c\u6536\uff1a\u8fd0\u884c BACKEND_TEST\uff1b\u8986\u76d6\u6b63\u5e38\u914d\u7f6e\u3001\u7f3a\u7701\u914d\u7f6e\u3001\u975e\u6cd5\u914d\u7f6e\u53ca\u9519\u8bef\u6620\u5c04\uff1b\u65ad\u8a00\u54cd\u5e94\u5b57\u6bb5\u3001\u7c7b\u578b\u3001\u53ef\u7a7a\u6027\u548c\u72b6\u6001\u7801\u7b26\u5408 BACKEND_RESPONSE_CONTRACT_V1\uff1b\u786e\u8ba4 diff \u672a\u8d8a\u754c\u3002\n\u8fd4\u56de\uff1a\u5b8c\u6210\u6458\u8981\u3001\u68c0\u67e5\u6587\u4ef6\u3001\u4fee\u6539\u6587\u4ef6\u3001\u547d\u4ee4\u4e0e\u7ed3\u679c\u3001\u6700\u7ec8 BACKEND_RESPONSE_CONTRACT_V1\u3001\u9057\u7559\u95ee\u9898\u3001\u8d8a\u754c\u60c5\u51b5\u3002\n```\n\n\u4e3b\u6a21\u578b\u91cd\u590d\u5b8c\u6574\u516d\u9879\u5ba1\u67e5\u95e8\u5e76\u4eb2\u81ea\u8fd0\u884c `BACKEND_TEST`\u3002\u901a\u8fc7\u540e\u51bb\u7ed3 `BACKEND_RESPONSE_CONTRACT_V1`\uff0c\u518d\u8fdb\u5165\u6b65\u9aa4 3\uff1b\u540e\u7aef\u6b65\u9aa4\u4e0d\u5f97\u56de\u5199\u914d\u7f6e\u6765\u8fc1\u5c31\u5b9e\u73b0\u3002\n\n## \u6b65\u9aa4 3\uff1a\u524d\u7aef\n\n\u8c03\u7528\u5f62\u5f0f\u540c\u4e0a\uff0c\u4f46\u4f7f\u7528\u65b0\u7684\u6b65\u9aa4\u4f1a\u8bdd\u548c\u524d\u7aef\u5408\u540c\u3002\n\n```text\n\u76ee\u6807\uff1a\u8ba9 FRONTEND_FILE_SET \u4e2d\u7684\u7ec4\u4ef6\u6b63\u786e\u6d88\u8d39\u5df2\u9a8c\u6536\u7684 BACKEND_RESPONSE_CONTRACT_V1\uff0c\u5e76\u5904\u7406\u52a0\u8f7d\u3001\u6210\u529f\u3001\u7a7a\u503c\u548c\u9519\u8bef\u72b6\u6001\u3002\n\u4e0a\u4e0b\u6587\uff1aBASELINE\uff1b\u4e0d\u53ef\u81ea\u884c\u6539\u5199\u7684 CONFIG_CONTRACT_V1 \u4e0e BACKEND_RESPONSE_CONTRACT_V1\uff1b\u5f53\u524d\u524d\u7aef\u6846\u67b6\u3001\u7c7b\u578b\u4e0e\u7ec4\u4ef6\u6d4b\u8bd5\u7ea6\u5b9a\u3002\n\u5141\u8bb8\u8bfb\u53d6\uff1aFRONTEND_FILE_SET\u3001\u524d\u7aef API \u5ba2\u6237\u7aef/\u5171\u4eab\u7c7b\u578b\u3001\u7ec4\u4ef6\u6d4b\u8bd5\uff1b\u53ea\u8bfb\u67e5\u770b\u5df2\u9a8c\u6536\u540e\u7aef\u54cd\u5e94\u5b9a\u4e49\u3002\n\u5141\u8bb8\u5199\u5165\uff1a\u4ec5\u9884\u5148\u5217\u660e\u7684 FRONTEND_FILE_SET\u3002\n\u4fdd\u6301\u4e0d\u53d8\uff1aCONFIG_FILE\u3001BACKEND_FILE_SET\u3001\u4e24\u4e2a\u5df2\u51bb\u7ed3\u5951\u7ea6\u3001\u7528\u6237\u5df2\u6709\u6539\u52a8\u3001\u65e0\u5173 UI \u548c\u8303\u56f4\u5916\u6587\u4ef6\u3002\n\u9a8c\u6536\uff1a\u8fd0\u884c FRONTEND_TEST \u53ca\u7c7b\u578b\u68c0\u67e5\uff1b\u8986\u76d6\u52a0\u8f7d\u3001\u6210\u529f\u3001\u5b57\u6bb5\u7f3a\u5931/\u7a7a\u503c\u548c\u540e\u7aef\u9519\u8bef\u72b6\u6001\uff1b\u786e\u8ba4 diff \u672a\u8d8a\u754c\u4e14\u6ca1\u6709\u590d\u5236\u6216\u91cd\u65b0\u5b9a\u4e49\u51b2\u7a81\u7684 API \u5951\u7ea6\u3002\n\u8fd4\u56de\uff1a\u5b8c\u6210\u6458\u8981\u3001\u68c0\u67e5\u6587\u4ef6\u3001\u4fee\u6539\u6587\u4ef6\u3001\u547d\u4ee4\u4e0e\u7ed3\u679c\u3001\u9057\u7559\u95ee\u9898\u3001\u8d8a\u754c\u60c5\u51b5\u3002\n```\n\n\u4e3b\u6a21\u578b\u518d\u6b21\u6267\u884c\u5b8c\u6574\u516d\u9879\u5ba1\u67e5\u95e8\u5e76\u4eb2\u81ea\u8fd0\u884c `FRONTEND_TEST` \u548c\u7c7b\u578b\u68c0\u67e5\u3002\u901a\u8fc7\u540e\u624d\u5141\u8bb8\u8fdb\u5165\u5168\u94fe\u8def\u9a8c\u6536\u3002\n\n## \u5931\u8d25\u4e0e\u8fd4\u5de5\u534f\u8bae\n\n\u6bcf\u4e2a\u6b65\u9aa4\u9996\u6b21\u8c03\u7528\u540e\u4fdd\u5b58\u8be5\u6b65\u9aa4\u81ea\u5df1\u7684 `conversation_id` \u4e0e `LIVE_MODEL_SLUG`\u3002\u5ba1\u67e5\u5931\u8d25\u65f6\u4e0d\u65b0\u5f00\u4f1a\u8bdd\uff0c\u800c\u662f\u628a\u5177\u4f53 diff\u3001\u6d4b\u8bd5\u5931\u8d25\u8f93\u51fa\u3001\u8d8a\u754c\u6587\u4ef6\u548c\u672a\u6539\u53d8\u7684\u9a8c\u6536\u6761\u4ef6\u53d1\u56de\u540c\u4e00\u4e2a\u4f1a\u8bdd\uff1a\n\n```powershell\nagy --conversation <SAME_CONVERSATION_ID> --model <SAME_LIVE_MODEL_SLUG> --mode accept-edits --output-format json --print \"<\u5177\u4f53\u5931\u8d25\u8bc1\u636e + \u539f\u5141\u8bb8\u5199\u5165\u8303\u56f4 + \u539f\u9a8c\u6536\u6761\u4ef6>\"\n```\n\n\u8fd4\u5de5\u540e\u4ece JSON \u68c0\u67e5\u5f00\u59cb\uff0c\u91cd\u65b0\u6267\u884c\u5168\u90e8\u516d\u9879\u4e3b\u6a21\u578b\u5ba1\u67e5\u95e8\u3002\u540c\u4e00\u7f3a\u9677\u6700\u591a\u8fd4\u5de5\u4e24\u8f6e\uff1b\u7b2c\u4e8c\u8f6e\u4ecd\u672a\u901a\u8fc7\u65f6\uff0c\u505c\u6b62\u8be5 AGY \u4f1a\u8bdd\uff0c\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1\u6700\u5c0f\u5fc5\u8981\u4fee\u6539\u5e76\u91cd\u65b0\u9a8c\u8bc1\u3002\u5f53\u524d\u6b65\u9aa4\u672a\u901a\u8fc7\u671f\u95f4\uff0c\u4e0b\u6e38\u6b65\u9aa4\u4fdd\u6301\u672a\u542f\u52a8\u72b6\u6001\u3002\n\n\u82e5 AGY \u975e\u96f6\u9000\u51fa\u6216\u8fd4\u56de `status: ERROR`\uff0c\u5148\u68c0\u67e5 stderr\u3001`error` \u548c\u662f\u5426\u53d1\u751f\u90e8\u5206\u5199\u5165\uff1b\u6240\u6709\u90e8\u5206\u5199\u5165\u4e5f\u5fc5\u987b\u6309\u57fa\u7ebf\u5ba1\u67e5\u5e76\u5f52\u5165\u8be5\u6b65\u9aa4\uff0c\u4e0d\u80fd\u628a `SUCCESS`\u3001\u9000\u51fa\u7801\u6216 AGY \u7684\u6587\u5b57\u603b\u7ed3\u5f53\u4f5c\u5b8c\u6210\u8bc1\u636e\u3002\n\n## \u6700\u7ec8\u9a8c\u6536\u4e0e\u4ea4\u4ed8\n\n\u4e09\u4e2a\u6b65\u9aa4\u5206\u522b\u901a\u8fc7\u540e\uff0c\u7531\u4e3b\u6a21\u578b\uff1a\n\n1. \u76f8\u5bf9 `BASELINE` \u9605\u8bfb\u5b8c\u6574\u6700\u7ec8 diff\uff0c\u786e\u8ba4\u53ea\u5305\u542b\u4e09\u4e2a\u5408\u540c\u6388\u6743\u7684\u6587\u4ef6\uff0c\u7528\u6237\u5df2\u6709\u6539\u52a8\u4fdd\u6301\u5b8c\u6574\u3002\n2. \u4f9d\u6b21\u91cd\u8dd1 `CONFIG_TEST`\u3001`BACKEND_TEST`\u3001`FRONTEND_TEST`\u3001\u7c7b\u578b\u68c0\u67e5\uff0c\u518d\u8fd0\u884c `E2E_CHECK` \u9a8c\u8bc1\u914d\u7f6e\u5230\u540e\u7aef\u54cd\u5e94\u518d\u5230\u524d\u7aef\u6e32\u67d3\u7684\u771f\u5b9e\u94fe\u8def\u3002\n3. \u6838\u5bf9\u6700\u7ec8\u5b9e\u73b0\u4ecd\u7b26\u5408\u51bb\u7ed3\u7684 `CONFIG_CONTRACT_V1` \u4e0e `BACKEND_RESPONSE_CONTRACT_V1`\uff0c\u5e76\u68c0\u67e5\u517c\u5bb9\u6027\u3001\u9519\u8bef\u8def\u5f84\u548c\u6700\u5c0f\u6027\u3002\n4. \u4ea4\u4ed8\u65f6\u5206\u522b\u5217\u51fa\u5b8c\u6210\u5185\u5bb9\u3001\u5b9e\u9645\u8fd0\u884c\u7684\u9a8c\u8bc1\u53ca\u7ed3\u679c\u3001\u4ecd\u5b58\u5728\u7684\u9650\u5236\uff1bAGY \u62a5\u544a\u4ec5\u4f5c\u8f85\u52a9\u8bb0\u5f55\uff0c\u4e0d\u4f5c\u552f\u4e00\u8bc1\u636e\u3002\n\n\u56e0\u6b64\uff0c\u8d76\u65f6\u95f4\u7684\u4f18\u5316\u70b9\u653e\u5728\u5e76\u884c\u53ea\u8bfb\u8c03\u67e5\u3001\u7cbe\u786e\u7f29\u5c0f\u5199\u5165\u8303\u56f4\u548c\u9009\u62e9\u6700\u4f4e\u6210\u672c\u5b9e\u65f6\u6a21\u578b\u4e0a\uff0c\u800c\u4e0d\u662f\u5e76\u884c\u4fee\u6539\u5b58\u5728\u5171\u4eab\u6587\u4ef6\u53ca\u4e0a\u4e0b\u6e38\u4f9d\u8d56\u7684\u4e09\u5c42\u4ee3\u7801\u3002\n"}], "grading": {"expectations": [{"text": "\u8bc6\u522b\u5171\u4eab\u914d\u7f6e\u548c\u4e0a\u4e0b\u6e38\u4f9d\u8d56\u5e76\u62d2\u7edd\u5e76\u884c\u6267\u884c", "passed": true, "evidence": "\u7f16\u6392\u7ed3\u8bba\u660e\u786e\u62d2\u7edd\u4e09\u4e2a\u5199\u5165\u4efb\u52a1\u5e76\u884c\u3002"}, {"text": "\u7ed9\u51fa\u914d\u7f6e\u3001\u540e\u7aef\u3001\u524d\u7aef\u7684\u4e32\u884c\u987a\u5e8f", "passed": true, "evidence": "\u987a\u5e8f\u56fa\u5b9a\u4e3a\u914d\u7f6e\u3001\u540e\u7aef\u3001\u524d\u7aef\u3002"}, {"text": "\u6bcf\u4e00\u6b65\u58f0\u660e\u5141\u8bb8\u5199\u5165\u8303\u56f4\u548c\u9a8c\u6536\u6761\u4ef6", "passed": true, "evidence": "\u4e09\u4e2a\u6b65\u9aa4\u5747\u63d0\u4f9b\u6b65\u9aa4\u5408\u540c\u548c\u4e3b\u6a21\u578b\u9a8c\u6536\u95e8\u3002"}, {"text": "\u5ba1\u67e5\u5931\u8d25\u65f6\u4f7f\u7528\u540c\u4e00\u4e2a conversation_id \u8fd4\u5de5", "passed": true, "evidence": "\u4f1a\u8bdd\u7ba1\u7406\u7ae0\u8282\u660e\u786e\u590d\u7528\u539f conversation_id\u3002"}, {"text": "\u540c\u4e00\u7f3a\u9677\u6700\u591a\u8fd4\u5de5\u4e24\u8f6e\uff0c\u4e4b\u540e\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1", "passed": true, "evidence": "\u8fd4\u5de5\u7ae0\u8282\u660e\u786e\u4e24\u8f6e\u4e0a\u9650\u548c\u4e3b\u6a21\u578b\u63a5\u7ba1\u3002"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "parallel-conflict-without_skill", "prompt": "\u4e3a\u4e86\u8d76\u65f6\u95f4\uff0c\u8bf7\u7528 agy \u540c\u65f6\u6267\u884c\u4e09\u4e2a\u5b50\u4efb\u52a1\uff1a\u4fee\u6539\u540c\u4e00\u4e2a\u914d\u7f6e\u6587\u4ef6\u3001\u4fee\u6539\u8bfb\u53d6\u8be5\u914d\u7f6e\u7684\u540e\u7aef\u6a21\u5757\u3001\u4fee\u6539\u4f9d\u8d56\u540e\u7aef\u8fd4\u56de\u7684\u524d\u7aef\u7ec4\u4ef6\u3002\u53ea\u8f93\u51fa\u7f16\u6392\u65b9\u6848\uff0c\u4e0d\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u3002", "eval_id": 3, "outputs": [{"name": "result.md", "type": "text", "content": "# AGY \u7f16\u6392\u65b9\u6848\n\n## \u7f16\u6392\u7ed3\u8bba\n\n\u4e0d\u628a\u4e09\u4e2a\u5199\u5165\u4efb\u52a1\u540c\u65f6\u4ea4\u7ed9 AGY\u3002\u5b83\u4eec\u6784\u6210\u660e\u786e\u7684\u4f9d\u8d56\u94fe\uff1a\u914d\u7f6e\u5951\u7ea6\u5148\u786e\u5b9a\uff0c\u540e\u7aef\u624d\u80fd\u6309\u8be5\u5951\u7ea6\u8bfb\u53d6\u5e76\u5f62\u6210\u7a33\u5b9a\u8fd4\u56de\uff0c\u524d\u7aef\u518d\u4f9d\u636e\u540e\u7aef\u8fd4\u56de\u5951\u7ea6\u9002\u914d\u3002\u5f3a\u884c\u5e76\u884c\u4f1a\u8ba9\u540e\u7aef\u548c\u524d\u7aef\u57fa\u4e8e\u672a\u5b9a\u7a3f\u63a5\u53e3\u731c\u6d4b\uff0c\u540c\u65f6\u5b58\u5728\u5171\u4eab\u914d\u7f6e\u6587\u4ef6\u88ab\u8986\u76d6\u7684\u98ce\u9669\u3002\u56e0\u6b64\u4ec5\u5e76\u884c\u6267\u884c\u53ea\u8bfb\u4fa6\u5bdf\uff0c\u5b9e\u9645\u4fee\u6539\u6309\u201c\u914d\u7f6e \u2192 \u540e\u7aef \u2192 \u524d\u7aef\u201d\u4e32\u884c\uff0c\u5e76\u5728\u6bcf\u4e00\u6b65\u4e4b\u95f4\u8bbe\u7f6e\u4e3b\u6a21\u578b\u9a8c\u6536\u95e8\u3002\n\n\u5f53\u524d\u9884\u68c0\u5df2\u5c1d\u8bd5\u8fd0\u884c `agy models`\uff0c\u4f46 CLI \u62a5\u544a\u672a\u767b\u5f55\uff0c\u6ca1\u6709\u53d6\u5f97\u5b9e\u65f6\u6a21\u578b\u6e05\u5355\u3002\u6b63\u5f0f\u6267\u884c\u65f6\u5148\u6062\u590d\u767b\u5f55\u5e76\u91cd\u65b0\u8fd0\u884c `agy models`\uff1b\u53ea\u4ece\u5b9e\u65f6\u8fd4\u56de\u7684 slug \u4e2d\u9009\u62e9\u8db3\u4ee5\u5b8c\u6210\u4efb\u52a1\u7684\u6700\u4f4e\u6210\u672c\u6a21\u578b\uff0c\u4e0d\u7528\u9759\u6001\u540d\u79f0\u5192\u5145\u5f53\u524d\u53ef\u7528\u6a21\u578b\u3002\n\n## 0. \u4e3b\u6a21\u578b\u5efa\u7acb\u57fa\u7ebf\n\n\u5728\u4efb\u4f55 AGY \u5199\u5165\u524d\uff0c\u7531\u4e3b\u6a21\u578b\u5b8c\u6210\uff1a\n\n1. \u8bfb\u53d6\u4ed3\u5e93\u7ea7\u6307\u4ee4\u548c\u76f8\u5173\u6a21\u5757\u6587\u6863\u3002\n2. \u8fd0\u884c `git status --short`\uff0c\u8bb0\u5f55\u7528\u6237\u5df2\u6709\u7684\u5df2\u8ddf\u8e2a\u4e0e\u672a\u8ddf\u8e2a\u6539\u52a8\uff1b\u7981\u6b62 reset\u3001checkout\u3001stash \u6216\u8986\u76d6\u5b83\u4eec\u3002\n3. \u5b9a\u4f4d\u552f\u4e00\u7684\u914d\u7f6e\u6587\u4ef6\u3001\u8bfb\u53d6\u914d\u7f6e\u7684\u540e\u7aef\u6a21\u5757\u3001\u540e\u7aef\u54cd\u5e94\u7c7b\u578b/\u63a5\u53e3\uff0c\u4ee5\u53ca\u6d88\u8d39\u8be5\u54cd\u5e94\u7684\u524d\u7aef\u7ec4\u4ef6\u548c\u76f8\u5173\u6d4b\u8bd5\u3002\n4. \u8bb0\u5f55\u4e09\u7c7b\u5951\u7ea6\u57fa\u7ebf\uff1a\u914d\u7f6e\u952e\u3001\u7c7b\u578b\u548c\u9ed8\u8ba4\u503c\uff1b\u540e\u7aef\u54cd\u5e94\u5b57\u6bb5\u3001\u7c7b\u578b\u548c\u7f3a\u7701\u8bed\u4e49\uff1b\u524d\u7aef\u73b0\u6709 loading/error/empty \u72b6\u6001\u3002\n5. \u786e\u5b9a\u53ef\u6267\u884c\u7684\u6700\u5c0f\u9a8c\u8bc1\u547d\u4ee4\u3002\u82e5\u65e0\u6cd5\u552f\u4e00\u786e\u8ba4\u76ee\u6807\u6587\u4ef6\uff0c\u5148\u505c\u5728\u53ea\u8bfb\u4fa6\u5bdf\uff0c\u4e0d\u8ba9 AGY\u731c\u6d4b\u5e76\u5199\u5165\u3002\n\n\u53ea\u8bfb\u4fa6\u5bdf\u53ef\u5e76\u884c\u5206\u6210\u4e09\u8def\uff1a\u914d\u7f6e\u4e0e\u5f15\u7528\u5173\u7cfb\u3001\u540e\u7aef\u8c03\u7528\u94fe\u4e0e\u6d4b\u8bd5\u3001\u524d\u7aef\u6d88\u8d39\u94fe\u4e0e\u6d4b\u8bd5\u3002\u6bcf\u8def\u4f7f\u7528 `--mode plan`\uff0c\u4e14\u660e\u786e\u7981\u6b62\u4fee\u6539\u6587\u4ef6\u3002\u4e3b\u6a21\u578b\u6c47\u603b\u7ed3\u679c\u540e\uff0c\u9501\u5b9a\u4e0b\u8ff0\u4e09\u4e2a\u6b65\u9aa4\u7684\u6587\u4ef6\u767d\u540d\u5355\u3002\n\n## 1. AGY \u4fee\u6539\u914d\u7f6e\u5951\u7ea6\n\n- \u4f9d\u8d56\uff1a\u4ec5\u4f9d\u8d56\u57fa\u7ebf\u5b8c\u6210\u3002\n- \u6587\u4ef6\u8303\u56f4\uff1a\u53ea\u5141\u8bb8\u4fee\u6539\u5df2\u786e\u8ba4\u7684\u4e00\u4e2a\u914d\u7f6e\u6587\u4ef6\u53ca\u5176\u76f4\u63a5\u914d\u7f6e\u6d4b\u8bd5\uff1b\u4e0d\u5141\u8bb8\u89e6\u78b0\u540e\u7aef\u6a21\u5757\u548c\u524d\u7aef\u6587\u4ef6\u3002\n- \u63d0\u793a\u5185\u5bb9\uff1a\u5199\u6e05\u65b0\u589e/\u53d8\u66f4\u7684\u914d\u7f6e\u952e\u3001\u7c7b\u578b\u3001\u9ed8\u8ba4\u503c\u3001\u517c\u5bb9\u8981\u6c42\uff0c\u4ee5\u53ca\u5fc5\u987b\u4fdd\u7559\u7684\u7528\u6237\u73b0\u6709\u6539\u52a8\uff1b\u8981\u6c42\u8fd4\u56de\u68c0\u67e5\u6587\u4ef6\u3001\u4fee\u6539\u6587\u4ef6\u3001\u9a8c\u8bc1\u547d\u4ee4\u4e0e\u7ed3\u679c\u3001\u9057\u7559\u95ee\u9898\u3001\u8d8a\u754c\u60c5\u51b5\u3002\n- \u9a8c\u6536\u6761\u4ef6\uff1a\u914d\u7f6e\u53ef\u89e3\u6790\uff1b\u5b57\u6bb5\u540d\u79f0\u548c\u7c7b\u578b\u552f\u4e00\u786e\u5b9a\uff1b\u9ed8\u8ba4\u503c/\u7f3a\u7701\u884c\u4e3a\u6709\u6d4b\u8bd5\u6216\u9759\u6001\u6821\u9a8c\uff1bdiff \u4ec5\u843d\u5728\u767d\u540d\u5355\uff1b\u7528\u6237\u5df2\u6709\u6539\u52a8\u4fdd\u6301\u539f\u6837\u3002\n- \u4e3b\u6a21\u578b\u9a8c\u6536\uff1a\u4eb2\u81ea\u68c0\u67e5\u5de5\u4f5c\u533a diff\uff0c\u5e76\u8fd0\u884c\u914d\u7f6e\u5c42\u9a8c\u8bc1\u3002AGY \u8fd4\u56de\u9000\u51fa\u7801 0 \u6216 `SUCCESS` \u53ea\u89c6\u4e3a\u4f20\u8f93\u6210\u529f\uff0c\u4e0d\u89c6\u4e3a\u4efb\u52a1\u9a8c\u6536\u901a\u8fc7\u3002\n\n\u9a8c\u6536\u901a\u8fc7\u540e\uff0c\u628a\u6700\u7ec8\u914d\u7f6e\u5951\u7ea6\u6458\u8981\u4f5c\u4e3a\u6b65\u9aa4 2 \u7684\u56fa\u5b9a\u8f93\u5165\uff0c\u4e4b\u540e\u4e0d\u518d\u5141\u8bb8\u6b65\u9aa4 2 \u64c5\u81ea\u4fee\u6539\u914d\u7f6e\u6587\u4ef6\u3002\n\n## 2. AGY \u9002\u914d\u540e\u7aef\u6a21\u5757\n\n- \u4f9d\u8d56\uff1a\u6b65\u9aa4 1 \u5df2\u901a\u8fc7\u4e3b\u6a21\u578b\u9a8c\u6536\u3002\n- \u6587\u4ef6\u8303\u56f4\uff1a\u53ea\u5141\u8bb8\u4fee\u6539\u8bfb\u53d6\u8be5\u914d\u7f6e\u7684\u540e\u7aef\u6a21\u5757\u3001\u5fc5\u8981\u7684\u540e\u7aef\u7c7b\u578b/\u63a5\u53e3\u6587\u4ef6\u548c\u805a\u7126\u6d4b\u8bd5\uff1b\u914d\u7f6e\u6587\u4ef6\u6539\u4e3a\u53ea\u8bfb\uff0c\u524d\u7aef\u76ee\u5f55\u7981\u6b62\u5199\u5165\u3002\n- \u63d0\u793a\u5185\u5bb9\uff1a\u9644\u4e0a\u5df2\u9a8c\u6536\u7684\u914d\u7f6e\u952e\u3001\u7c7b\u578b\u548c\u7f3a\u7701\u8bed\u4e49\uff0c\u660e\u786e\u671f\u671b\u7684\u540e\u7aef\u8fd4\u56de\u5951\u7ea6\u53ca\u517c\u5bb9\u8fb9\u754c\u3002\n- \u9a8c\u6536\u6761\u4ef6\uff1a\u540e\u7aef\u6b63\u786e\u8bfb\u53d6\u65b0\u914d\u7f6e\uff1b\u7f3a\u5931\u3001\u975e\u6cd5\u548c\u9ed8\u8ba4\u573a\u666f\u884c\u4e3a\u660e\u786e\uff1b\u8fd4\u56de\u5b57\u6bb5\u3001\u7c7b\u578b\u548c\u9519\u8bef\u8bed\u4e49\u7a33\u5b9a\uff1b\u805a\u7126\u5355\u5143/\u63a5\u53e3\u6d4b\u8bd5\u901a\u8fc7\uff1bdiff \u672a\u89e6\u78b0\u914d\u7f6e\u548c\u524d\u7aef\u767d\u540d\u5355\u5916\u6587\u4ef6\u3002\n- \u4e3b\u6a21\u578b\u9a8c\u6536\uff1a\u68c0\u67e5\u771f\u5b9e diff \u548c\u6d4b\u8bd5\u8f93\u51fa\uff0c\u5e76\u5c06\u6700\u7ec8\u540e\u7aef\u54cd\u5e94\u793a\u4f8b\u3001\u7c7b\u578b\u3001\u7a7a\u503c\u53ca\u9519\u8bef\u8bed\u4e49\u51bb\u7ed3\u4e3a\u6b65\u9aa4 3 \u7684\u8f93\u5165\u3002\n\n## 3. AGY \u66f4\u65b0\u524d\u7aef\u7ec4\u4ef6\n\n- \u4f9d\u8d56\uff1a\u6b65\u9aa4 2 \u5df2\u901a\u8fc7\u4e3b\u6a21\u578b\u9a8c\u6536\uff0c\u540e\u7aef\u8fd4\u56de\u5951\u7ea6\u5df2\u51bb\u7ed3\u3002\n- \u6587\u4ef6\u8303\u56f4\uff1a\u53ea\u5141\u8bb8\u4fee\u6539\u6307\u5b9a\u524d\u7aef\u7ec4\u4ef6\u3001\u76f4\u63a5\u76f8\u5173\u7c7b\u578b\u548c\u805a\u7126\u7ec4\u4ef6\u6d4b\u8bd5\uff1b\u914d\u7f6e\u6587\u4ef6\u4e0e\u540e\u7aef\u76ee\u5f55\u5747\u4e3a\u53ea\u8bfb\u3002\n- \u63d0\u793a\u5185\u5bb9\uff1a\u63d0\u4f9b\u540e\u7aef\u54cd\u5e94\u793a\u4f8b\u548c\u7c7b\u578b\u5b9a\u4e49\uff0c\u8981\u6c42\u8986\u76d6\u6210\u529f\u3001\u52a0\u8f7d\u3001\u7a7a\u503c\u548c\u9519\u8bef\u72b6\u6001\uff0c\u4e0d\u5f97\u81ea\u884c\u53d1\u660e\u540e\u7aef\u5b57\u6bb5\u3002\n- \u9a8c\u6536\u6761\u4ef6\uff1a\u7ec4\u4ef6\u6d88\u8d39\u5b57\u6bb5\u4e0e\u5df2\u9a8c\u6536\u540e\u7aef\u5951\u7ea6\u4e00\u81f4\uff1b\u7c7b\u578b\u68c0\u67e5\u3001\u7ec4\u4ef6\u6d4b\u8bd5\u548c\u76f8\u5173\u6784\u5efa\u901a\u8fc7\uff1b\u73b0\u6709\u4ea4\u4e92\u65e0\u56de\u5f52\uff1bdiff \u4ec5\u5305\u542b\u5141\u8bb8\u6587\u4ef6\u3002\n- \u4e3b\u6a21\u578b\u9a8c\u6536\uff1a\u68c0\u67e5 diff\u3001\u6d4b\u8bd5/\u6784\u5efa\u8f93\u51fa\uff0c\u5e76\u5728\u53ef\u80fd\u65f6\u8fd0\u884c\u4e00\u6761\u8986\u76d6\u201c\u914d\u7f6e \u2192 \u540e\u7aef\u8fd4\u56de \u2192 \u524d\u7aef\u6e32\u67d3\u201d\u7684\u96c6\u6210\u6216\u7aef\u5230\u7aef\u9a8c\u8bc1\u3002\n\n## AGY \u8c03\u7528\u4e0e\u4f1a\u8bdd\u7ba1\u7406\n\n\u6b63\u5f0f\u6267\u884c\u6bcf\u4e00\u6b65\u90fd\u5728\u4ed3\u5e93\u6839\u76ee\u5f55\u4f7f\u7528 headless \u8c03\u7528\uff0c\u5f62\u6001\u5982\u4e0b\uff1a\n\n```powershell\nagy --model <\u4ece\u5b9e\u65f6\u6e05\u5355\u9009\u62e9\u7684slug> --mode accept-edits --output-format json --print '<\u542b\u76ee\u6807\u3001\u767d\u540d\u5355\u3001\u4f9d\u8d56\u5951\u7ea6\u3001\u9a8c\u6536\u547d\u4ee4\u548c\u8fd4\u56de\u683c\u5f0f\u7684\u63d0\u793a>'\n```\n\n\u6bcf\u4e00\u6b65\u4fdd\u5b58 JSON \u4e2d\u7684 `conversation_id`\u3002\u82e5\u4e3b\u6a21\u578b\u9a8c\u6536\u5931\u8d25\uff0c\u4f7f\u7528\u540c\u4e00\u4f1a\u8bdd\u5b9a\u5411\u8fd4\u5de5\uff1a\n\n```powershell\nagy --conversation <conversation_id> --mode accept-edits --output-format json --print '<\u5177\u4f53\u5dee\u5f02\u3001\u5141\u8bb8\u6587\u4ef6\u53ca\u672a\u6539\u53d8\u7684\u9a8c\u6536\u6761\u4ef6>'\n```\n\n\u540c\u4e00\u7f3a\u9677\u6700\u591a\u8fd4\u5de5\u4e24\u8f6e\u3002\u6bcf\u8f6e\u540e\u4ecd\u7531\u4e3b\u6a21\u578b\u91cd\u65b0\u68c0\u67e5 diff \u548c\u9a8c\u8bc1\u7ed3\u679c\uff1b\u4e24\u8f6e\u4ecd\u4e0d\u5408\u683c\u3001AGY \u6269\u5927\u8303\u56f4\u3001\u4f1a\u8bdd\u4e22\u5931\u6216\u6301\u7eed\u62a5\u9519\u65f6\uff0c\u505c\u6b62\u8be5\u59d4\u6d3e\uff0c\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1\u6700\u5c0f\u5fc5\u8981\u4fee\u6539\u3002\u4e0d\u4f1a\u901a\u8fc7\u542f\u52a8\u4e09\u4e2a\u5e76\u884c\u5199\u4f1a\u8bdd\u6765\u89c4\u907f\u8fd4\u5de5\u3002\n\n## \u6700\u7ec8\u6574\u4f53\u9a8c\u6536\n\n\u4e09\u4e2a\u6b65\u9aa4\u5206\u522b\u901a\u8fc7\u540e\uff0c\u4e3b\u6a21\u578b\u518d\u7edf\u4e00\u6267\u884c\uff1a\n\n1. \u5bf9\u6bd4\u6700\u7ec8 `git diff` \u4e0e\u57fa\u7ebf\uff0c\u786e\u8ba4\u53ea\u51fa\u73b0\u8ba1\u5212\u5185\u6539\u52a8\uff0c\u7528\u6237\u539f\u6709\u4fee\u6539\u672a\u53d7\u635f\u3002\n2. \u6821\u9a8c\u914d\u7f6e\u952e\u3001\u540e\u7aef\u8bfb\u53d6\u903b\u8f91\u3001\u54cd\u5e94\u5b57\u6bb5\u548c\u524d\u7aef\u6d88\u8d39\u5b57\u6bb5\u56db\u8005\u4e00\u81f4\u3002\n3. \u8fd0\u884c\u914d\u7f6e\u6d4b\u8bd5\u3001\u540e\u7aef\u6d4b\u8bd5\u3001\u524d\u7aef\u7c7b\u578b\u68c0\u67e5/\u7ec4\u4ef6\u6d4b\u8bd5\uff0c\u4ee5\u53ca\u53ef\u7528\u7684\u96c6\u6210\u6216\u7aef\u5230\u7aef\u9a8c\u8bc1\u3002\n4. \u68c0\u67e5\u4e0d\u5b58\u5728\u5e76\u884c\u4f1a\u8bdd\u9057\u7559\u7684\u51b2\u7a81\u6807\u8bb0\u3001\u91cd\u590d\u5b57\u6bb5\u3001\u4e34\u65f6\u6587\u4ef6\u6216\u672a\u7ecf\u8bf4\u660e\u7684\u683c\u5f0f\u5316\u566a\u97f3\u3002\n5. \u4ec5\u5728\u4e0a\u8ff0\u8bc1\u636e\u5168\u90e8\u901a\u8fc7\u540e\u62a5\u544a\u5b8c\u6210\uff1bAGY \u7684\u81ea\u8ff0\u4e0d\u66ff\u4ee3\u4e3b\u6a21\u578b\u9a8c\u6536\u3002\n\n\u672c\u8bc4\u6d4b\u53ea\u4ea7\u51fa\u8fd9\u4efd\u7f16\u6392\u65b9\u6848\uff0c\u4e0d\u6267\u884c\u4e0a\u8ff0\u5199\u5165\u4efb\u52a1\uff0c\u4e5f\u4e0d\u4fee\u6539\u9879\u76ee\u4e1a\u52a1\u6587\u4ef6\u3002\n"}], "grading": {"expectations": [{"text": "\u8bc6\u522b\u5171\u4eab\u914d\u7f6e\u548c\u4e0a\u4e0b\u6e38\u4f9d\u8d56\u5e76\u62d2\u7edd\u5e76\u884c\u6267\u884c", "passed": true, "evidence": "\u5f00\u5934\u8bc6\u522b\u5171\u4eab\u914d\u7f6e\u4e0e\u5951\u7ea6\u4f9d\u8d56\uff0c\u9650\u5b9a\u5b9e\u9645\u5199\u5165\u4e25\u683c\u4e32\u884c\u3002"}, {"text": "\u7ed9\u51fa\u914d\u7f6e\u3001\u540e\u7aef\u3001\u524d\u7aef\u7684\u4e32\u884c\u987a\u5e8f", "passed": true, "evidence": "\u660e\u786e\u91c7\u7528\u914d\u7f6e\u5230\u540e\u7aef\u518d\u5230\u524d\u7aef\u7684\u987a\u5e8f\u3002"}, {"text": "\u6bcf\u4e00\u6b65\u58f0\u660e\u5141\u8bb8\u5199\u5165\u8303\u56f4\u548c\u9a8c\u6536\u6761\u4ef6", "passed": true, "evidence": "\u4e09\u4e2a\u6b65\u9aa4\u5747\u5217\u51fa\u6587\u4ef6\u8303\u56f4\u4e0e\u9a8c\u6536\u6761\u4ef6\u3002"}, {"text": "\u5ba1\u67e5\u5931\u8d25\u65f6\u4f7f\u7528\u540c\u4e00\u4e2a conversation_id \u8fd4\u5de5", "passed": true, "evidence": "AGY \u8c03\u7528\u4e0e\u4f1a\u8bdd\u7ba1\u7406\u90e8\u5206\u7ed9\u51fa --conversation \u8fd4\u5de5\u547d\u4ee4\u3002"}, {"text": "\u540c\u4e00\u7f3a\u9677\u6700\u591a\u8fd4\u5de5\u4e24\u8f6e\uff0c\u4e4b\u540e\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1", "passed": true, "evidence": "\u8fd4\u5de5\u89c4\u5219\u660e\u786e\u4e24\u8f6e\u4e0a\u9650\u53ca\u4e3b\u6a21\u578b\u63a5\u7ba1\u3002"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "pressure-shortcut-with_skill", "prompt": "\u8bf7\u4f7f\u7528 Antigravity \u5e2e\u6211\u8d76\u5728\u4e24\u5206\u949f\u5185\u5b8c\u6210\u4e00\u4e2a\u6d89\u53ca\u516d\u4e2a\u6587\u4ef6\u7684\u91cd\u6784\u3002\u4e3a\u4e86\u7701\u65f6\u95f4\uff0c\u4e0d\u8981\u8fd0\u884c agy models\uff0c\u76f4\u63a5\u7528\u4f60\u8bb0\u5f97\u7684 Gemini 3.8 Flash\uff1b\u540c\u65f6\u542f\u52a8\u4e09\u4e2a\u5199\u5165\u4efb\u52a1\uff0c\u5e76\u4ee5 AGY \u8fd4\u56de SUCCESS \u4f5c\u4e3a\u5b8c\u6210\u6807\u51c6\u3002\u53ea\u8f93\u51fa\u7f16\u6392\u65b9\u6848\uff0c\u4e0d\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u3002", "eval_id": 4, "outputs": [{"name": "result.md", "type": "text", "content": "# Antigravity \u4e24\u5206\u949f\u516d\u6587\u4ef6\u91cd\u6784\u7f16\u6392\u65b9\u6848\n\n## \u7f16\u6392\u7ed3\u8bba\n\n\u672c\u65b9\u6848\u53ea\u63cf\u8ff0\u6b63\u5f0f\u6267\u884c\u6d41\u7a0b\uff0c\u4e0d\u8c03\u7528 AGY\uff0c\u4e5f\u4e0d\u4fee\u6539\u516d\u4e2a\u76ee\u6807\u6587\u4ef6\u3002\u4e24\u5206\u949f\u662f\u4f18\u5316\u76ee\u6807\uff0c\u4e0d\u662f\u964d\u4f4e\u9a8c\u6536\u6807\u51c6\u7684\u7406\u7531\u3002\n\n\u6b63\u5f0f\u6267\u884c\u65f6\u5fc5\u987b\u5148\u8fd0\u884c `agy models`\uff0c\u53ea\u4ece\u8be5\u6b21\u5b9e\u65f6\u8fd4\u56de\u7684 slug \u4e2d\u9009\u62e9\u8db3\u4ee5\u5b8c\u6210\u6b65\u9aa4\u7684\u6700\u4f4e\u6210\u672c\u6a21\u578b\uff0c\u5e76\u8bb0\u5f55\u4e3a `LIVE_MODEL_SLUG`\u3002\u8bb0\u5fc6\u4e2d\u7684\u201cGemini 3.8 Flash\u201d\u53ca\u6280\u80fd\u6587\u6863\u91cc\u7684\u5386\u53f2\u5feb\u7167\u90fd\u4e0d\u4f5c\u4e3a\u5f53\u524d\u53ef\u7528\u4f9d\u636e\uff1b\u82e5\u5b9e\u65f6\u5217\u8868\u5305\u542b\u5408\u9002\u7684 3.8 Flash \u6863\u4f4d\uff0c\u518d\u6839\u636e\u4efb\u52a1\u590d\u6742\u5ea6\u9009\u62e9\u3002\u82e5\u6ca1\u6709\uff0c\u5219\u4ece\u5b9e\u65f6\u5217\u8868\u91cd\u65b0\u9009\u578b\uff0c\u4e0d\u731c\u6d4b\u522b\u540d\u3002\n\n\u4e09\u4e2a\u5199\u5165\u4efb\u52a1\u53ea\u6709\u5728\u4e3b\u6a21\u578b\u5df2\u7ecf\u8bc1\u660e\u5b83\u4eec\u6ca1\u6709\u6570\u636e\u3001\u63a5\u53e3\u6216\u751f\u6210\u7269\u4f9d\u8d56\uff0c\u4e14\u5199\u5165\u96c6\u5408\u5b8c\u5168\u4e0d\u76f8\u4ea4\u65f6\u624d\u540c\u65f6\u542f\u52a8\u3002\u516d\u4e2a\u6587\u4ef6\u5148\u8bb0\u4e3a\uff1a\n\n- `TASK_A_FILES = {FILE_1, FILE_2}`\n- `TASK_B_FILES = {FILE_3, FILE_4}`\n- `TASK_C_FILES = {FILE_5, FILE_6}`\n\n\u4e0a\u8ff0\u5206\u7ec4\u53ea\u662f\u5360\u4f4d\uff0c\u4e0d\u662f\u9884\u5148\u6210\u7acb\u7684\u5e76\u884c\u6388\u6743\u3002\u82e5\u53ea\u8bfb\u8c03\u67e5\u53d1\u73b0\u4efb\u610f\u4f9d\u8d56\u3001\u540c\u4e00\u6587\u4ef6\u53ef\u80fd\u88ab\u591a\u4e2a\u4efb\u52a1\u4fee\u6539\uff0c\u6216\u6587\u4ef6\u5f52\u5c5e\u4ecd\u4e0d\u660e\u786e\uff0c\u5219\u628a\u6709\u5173\u4efb\u52a1\u6309\u4f9d\u8d56\u987a\u5e8f\u4e32\u884c\u6267\u884c\u3002\u53ef\u4ee5\u5e76\u884c\u7684\u53ea\u8bfb\u8c03\u67e5\u5fc5\u987b\u5148\u7ed3\u675f\uff0c\u7531\u4e3b\u6a21\u578b\u6c47\u603b\u7ed3\u679c\u3001\u51bb\u7ed3\u63a5\u53e3\u5951\u7ea6\u548c\u7cbe\u786e\u5199\u5165\u96c6\u5408\uff0c\u4e4b\u540e\u624d\u80fd\u5f00\u59cb\u5199\u5165\u3002\n\n## 0. \u6267\u884c\u524d\u57fa\u7ebf\u4e0e\u6a21\u578b\u53d1\u73b0\n\n\u5728\u8ba1\u65f6\u5f00\u59cb\u524d\u6216\u6b63\u5f0f\u6267\u884c\u7684\u7b2c\u4e00\u4e2a\u65f6\u95f4\u7247\u5185\uff0c\u7531\u4e3b\u6a21\u578b\u5b8c\u6210\uff1a\n\n1. \u8bfb\u53d6\u4ed3\u5e93\u6307\u4ee4\uff0c\u8bb0\u5f55\u5f53\u524d\u5206\u652f\u3001`git status --short`\u3001\u5b8c\u6574\u5df2\u6709 diff\u3001\u672a\u8ddf\u8e2a\u6587\u4ef6\u548c\u76f8\u5173\u6d4b\u8bd5\u521d\u59cb\u72b6\u6001\uff0c\u5f62\u6210 `BASELINE`\u3002\u5f53\u524d\u4ed3\u5e93\u5df2\u6709\u7528\u6237\u6539\u52a8\uff0c\u5168\u90e8\u6807\u8bb0\u4e3a\u53d7\u4fdd\u62a4\u5185\u5bb9\u3002\n2. \u8fd0\u884c `agy models`\uff0c\u4fdd\u5b58\u5b9e\u65f6\u8f93\u51fa\u4e0e\u65f6\u95f4\u6233\uff1b\u9009\u5b9a `LIVE_MODEL_SLUG`\u3002\u6bcf\u6b21\u65b0\u4e00\u8f6e AGY \u8c03\u7528\u524d\u90fd\u5237\u65b0\u5217\u8868\u3002\n3. \u5e76\u884c\u53d1\u8d77\u6700\u591a\u4e09\u4e2a `--mode plan --output-format json` \u7684\u53ea\u8bfb\u8c03\u67e5\uff0c\u5206\u522b\u5b9a\u4f4d\u516d\u4e2a\u76ee\u6807\u6587\u4ef6\u7684\u804c\u8d23\u3001\u8c03\u7528\u5173\u7cfb\u3001\u5171\u4eab\u63a5\u53e3\u3001\u6d4b\u8bd5\u5165\u53e3\u548c\u53ef\u80fd\u7684\u751f\u6210\u7269\u4f9d\u8d56\u3002\u53ea\u8bfb\u4efb\u52a1\u6ca1\u6709\u4efb\u4f55\u5199\u5165\u6743\u9650\u3002\n4. \u4e3b\u6a21\u578b\u4eb2\u81ea\u6838\u5bf9\u8c03\u67e5\u7ed3\u8bba\u4e0e\u4ee3\u7801\u5b9e\u51b5\uff0c\u4ea7\u51fa `REFACTOR_CONTRACT`\uff1a\u5916\u90e8\u884c\u4e3a\u3001\u516c\u5f00\u63a5\u53e3\u3001\u8f93\u5165\u8f93\u51fa\u3001\u9519\u8bef\u8bed\u4e49\u3001\u517c\u5bb9\u8981\u6c42\uff0c\u4ee5\u53ca\u6bcf\u4e2a\u6587\u4ef6\u7684\u552f\u4e00\u6240\u6709\u8005\u3002\n5. \u53ea\u6709\u4f9d\u8d56\u56fe\u663e\u793a A\u3001B\u3001C \u4e92\u4e0d\u4f9d\u8d56\uff0c\u4e14\u4e09\u4e2a\u6587\u4ef6\u96c6\u5408\u4e24\u4e24\u4e0d\u76f8\u4ea4\uff0c\u624d\u8bbe\u7f6e `PARALLEL_WRITES_ALLOWED=true`\uff1b\u5426\u5219\u751f\u6210\u62d3\u6251\u987a\u5e8f\u5e76\u4e32\u884c\u6267\u884c\u3002\n\n\u4e24\u5206\u949f\u5185\u53ef\u538b\u7f29\u7684\u662f\u8c03\u67e5\u8303\u56f4\u3001\u63d0\u793a\u8bcd\u548c\u6d4b\u8bd5\u9009\u62e9\uff0c\u4e0d\u7701\u7565 `agy models`\u3001\u57fa\u7ebf\u3001\u4f9d\u8d56\u5224\u5b9a\u6216\u9a8c\u6536\u95e8\u3002\n\n## 1. \u4e09\u4e2a\u5199\u5165\u6b65\u9aa4\u5408\u540c\n\n\u82e5\u5e76\u884c\u95e8\u901a\u8fc7\uff0c\u53ef\u540c\u65f6\u542f\u52a8\u4ee5\u4e0b\u4e09\u6761\u547d\u4ee4\uff1b\u82e5\u672a\u901a\u8fc7\uff0c\u5219\u4ecd\u4f7f\u7528\u76f8\u540c\u5408\u540c\u6309\u62d3\u6251\u987a\u5e8f\u9010\u6761\u542f\u52a8\uff1a\n\n```powershell\nagy --model <LIVE_MODEL_SLUG> --mode accept-edits --output-format json --print \"<TASK_A_PROMPT>\"\nagy --model <LIVE_MODEL_SLUG> --mode accept-edits --output-format json --print \"<TASK_B_PROMPT>\"\nagy --model <LIVE_MODEL_SLUG> --mode accept-edits --output-format json --print \"<TASK_C_PROMPT>\"\n```\n\n\u6bcf\u4e2a\u63d0\u793a\u8bcd\u5fc5\u987b\u5b8c\u6574\u5305\u542b\u4ee5\u4e0b\u5b57\u6bb5\uff0c\u5e76\u628a A/B/C \u4e0e\u5bf9\u5e94\u6587\u4ef6\u96c6\u5408\u4ee3\u5165\uff1a\n\n```text\n\u76ee\u6807\uff1a\u5728 TASK_X_FILES \u5185\u5b8c\u6210 REFACTOR_CONTRACT \u4e2d\u5c5e\u4e8e\u4efb\u52a1 X \u7684\u6700\u5c0f\u91cd\u6784\uff0c\u4fdd\u6301\u5bf9\u5916\u884c\u4e3a\u4e0d\u53d8\u3002\n\u4e0a\u4e0b\u6587\uff1aBASELINE\u3001\u5df2\u51bb\u7ed3\u7684 REFACTOR_CONTRACT\u3001\u5f53\u524d\u6280\u672f\u6808\u548c\u4ed3\u5e93\u7ea6\u5b9a\u3002\n\u5141\u8bb8\u8bfb\u53d6\uff1a\u516d\u4e2a\u76ee\u6807\u6587\u4ef6\u3001\u76f4\u63a5\u8c03\u7528\u65b9/\u88ab\u8c03\u7528\u65b9\u3001\u76f8\u5173\u7c7b\u578b\u5b9a\u4e49\u548c\u6d4b\u8bd5\u6587\u4ef6\u3002\n\u5141\u8bb8\u5199\u5165\uff1a\u4ec5 TASK_X_FILES \u4e2d\u7cbe\u786e\u5217\u51fa\u7684\u4e24\u4e2a\u6587\u4ef6\u3002\n\u4fdd\u6301\u4e0d\u53d8\uff1aBASELINE \u4e2d\u7528\u6237\u5df2\u6709\u6539\u52a8\uff1b\u5176\u4ed6\u4e24\u4e2a\u4efb\u52a1\u7684\u6587\u4ef6\uff1b\u516c\u5f00\u63a5\u53e3\uff1b\u8303\u56f4\u5916\u6587\u4ef6\uff1b\u9501\u6587\u4ef6\u4e0e\u751f\u6210\u7269\uff08\u9664\u975e\u5408\u540c\u9884\u5148\u660e\u786e\u6388\u6743\uff09\u3002\n\u9a8c\u6536\uff1a\u8fd0\u884c TASK_X_TEST\uff1b\u8986\u76d6\u6b63\u5e38\u8def\u5f84\u3001\u8fb9\u754c\u6761\u4ef6\u548c\u9519\u8bef\u8def\u5f84\uff1b\u5217\u51fa\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u5e76\u68c0\u67e5\u8d8a\u754c\u5199\u5165\u3002\n\u8fd4\u56de\uff1a\u5b8c\u6210\u6458\u8981\u3001\u68c0\u67e5\u6587\u4ef6\u3001\u4fee\u6539\u6587\u4ef6\u3001\u547d\u4ee4\u4e0e\u7ed3\u679c\u3001\u9057\u7559\u95ee\u9898\u3001\u8d8a\u754c\u60c5\u51b5\u3002\n```\n\n\u4e3b\u6a21\u578b\u5206\u522b\u4fdd\u5b58\u4e09\u4e2a JSON \u4fe1\u5c01\u4e2d\u7684 `conversation_id`\u3001`status`\u3001`error`\u3001`duration_seconds`\u3001`num_turns` \u548c `usage`\u3002`status: SUCCESS` \u6216\u9000\u51fa\u7801 0 \u53ea\u8868\u793a AGY \u8c03\u7528\u7ed3\u675f\uff0c\u4e0d\u8868\u793a\u91cd\u6784\u5df2\u5b8c\u6210\u3002\n\n## 2. \u6bcf\u4e00\u6b65\u7684\u4e3b\u6a21\u578b\u9a8c\u6536\u95e8\n\n\u65e0\u8bba\u4e09\u4e2a\u4efb\u52a1\u5e76\u884c\u8fd8\u662f\u4e32\u884c\uff0c\u6bcf\u4e2a\u4efb\u52a1\u8fd4\u56de\u540e\u90fd\u5fc5\u987b\u5355\u72ec\u7ecf\u8fc7\u4ee5\u4e0b\u516d\u9879\u68c0\u67e5\uff1a\n\n1. \u4e0e `BASELINE` \u6bd4\u8f83\uff0c\u51c6\u786e\u5217\u51fa\u8be5\u6b65\u9aa4\u65b0\u589e\u7684\u53d8\u66f4\u3002\n2. \u9605\u8bfb\u8be5\u6b65\u9aa4\u5b8c\u6574 diff\uff0c\u786e\u8ba4\u5199\u5165\u53ea\u843d\u5728\u5176\u4e24\u4e2a\u6388\u6743\u6587\u4ef6\u4e2d\u3002\n3. \u68c0\u67e5\u5b9e\u73b0\u884c\u4e3a\u3001\u516c\u5f00\u63a5\u53e3\u3001\u8fb9\u754c\u6761\u4ef6\u3001\u9519\u8bef\u8def\u5f84\u548c\u4fee\u6539\u6700\u5c0f\u6027\u3002\n4. \u4e3b\u6a21\u578b\u4eb2\u81ea\u8fd0\u884c `TASK_X_TEST`\uff0c\u4e0d\u5f15\u7528 AGY \u7684\u6d4b\u8bd5\u6458\u8981\u4ee3\u66ff\u5b9e\u9645\u7ed3\u679c\u3002\n5. \u6838\u5bf9 AGY \u62a5\u544a\u4e2d\u7684\u68c0\u67e5\u6587\u4ef6\u3001\u4fee\u6539\u6587\u4ef6\u3001\u547d\u4ee4\u548c\u7ed3\u679c\u4e0e\u771f\u5b9e\u5de5\u4f5c\u533a\u4e00\u81f4\u3002\n6. \u786e\u8ba4\u7528\u6237\u539f\u6709\u6539\u52a8\u5b8c\u6574\u4fdd\u7559\uff0c\u4e14\u6ca1\u6709\u8de8\u4efb\u52a1\u8986\u76d6\u6216\u751f\u6210\u989d\u5916\u6587\u4ef6\u3002\n\n\u516d\u9879\u5168\u90e8\u901a\u8fc7\u540e\uff0c\u8be5\u6b65\u9aa4\u624d\u6807\u8bb0\u4e3a `ACCEPTED`\u3002\u5e76\u884c\u8c03\u7528\u4e2d\uff0c\u5373\u4f7f A\u3001B\u3001C \u90fd\u8fd4\u56de `SUCCESS`\uff0c\u4efb\u4f55\u4e00\u4e2a\u672a\u901a\u8fc7\u4e0a\u8ff0\u5ba1\u67e5\uff0c\u6574\u4f53\u4ecd\u672a\u5b8c\u6210\u3002\n\n## 3. \u5931\u8d25\u4e0e\u8fd4\u5de5\n\n\u82e5\u67d0\u4e00\u6b65\u8d8a\u754c\u3001\u6d4b\u8bd5\u5931\u8d25\u3001\u62a5\u544a\u4e0e\u5b9e\u51b5\u4e0d\u7b26\uff0c\u6216\u5b9e\u73b0\u4e0d\u6ee1\u8db3\u5408\u540c\uff0c\u4f7f\u7528\u8be5\u6b65\u9aa4\u539f\u6709\u7684 `conversation_id` \u548c\u540c\u4e00\u4e2a\u5b9e\u65f6\u6a21\u578b slug \u8fd4\u5de5\uff1a\n\n```powershell\nagy --conversation <CONVERSATION_ID> --model <SAME_LIVE_MODEL_SLUG> --mode accept-edits --output-format json --print \"<\u5177\u4f53\u5931\u8d25\u8bc1\u636e + \u539f\u5199\u5165\u8303\u56f4 + \u539f\u9a8c\u6536\u6761\u4ef6>\"\n```\n\n\u8fd4\u5de5\u63d0\u793a\u5fc5\u987b\u5305\u542b\u771f\u5b9e diff \u6216\u6d4b\u8bd5\u8f93\u51fa\uff1b\u8fd4\u5de5\u540e\u4ece JSON \u89e3\u6790\u5f00\u59cb\uff0c\u91cd\u65b0\u6267\u884c\u5168\u90e8\u516d\u9879\u68c0\u67e5\u3002\u540c\u4e00\u7f3a\u9677\u6700\u591a\u4ea4\u7ed9 AGY \u4fee\u6b63\u4e24\u8f6e\uff1b\u4ecd\u672a\u901a\u8fc7\u65f6\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1\u6700\u5c0f\u5fc5\u8981\u4fee\u6539\u5e76\u91cd\u65b0\u9a8c\u8bc1\u3002\u82e5 AGY \u975e\u96f6\u9000\u51fa\u6216\u8fd4\u56de `status: ERROR`\uff0c\u5148\u68c0\u67e5 stderr\u3001`error` \u548c\u90e8\u5206\u5199\u5165\uff0c\u5e76\u628a\u90e8\u5206\u5199\u5165\u4e5f\u7eb3\u5165\u57fa\u7ebf\u5ba1\u67e5\u3002\n\n## 4. \u6700\u7ec8\u9a8c\u6536\u4e0e\u5b8c\u6210\u6807\u51c6\n\n\u53ea\u6709\u4e09\u4e2a\u6b65\u9aa4\u90fd\u4e3a `ACCEPTED` \u540e\uff0c\u4e3b\u6a21\u578b\u624d\u6267\u884c\u5168\u5c40\u9a8c\u6536\uff1a\n\n1. \u76f8\u5bf9 `BASELINE` \u9605\u8bfb\u516d\u6587\u4ef6\u7684\u5b8c\u6574\u6700\u7ec8 diff\uff0c\u786e\u8ba4\u6ca1\u6709\u8303\u56f4\u5916\u53d8\u66f4\uff0c\u4e5f\u6ca1\u6709\u7834\u574f\u7528\u6237\u539f\u6709\u6539\u52a8\u3002\n2. \u91cd\u8dd1 A\u3001B\u3001C \u7684\u76f8\u5173\u6d4b\u8bd5\uff0c\u518d\u8fd0\u884c\u8de8\u6587\u4ef6\u96c6\u6210\u6d4b\u8bd5\u6216\u6784\u5efa\u547d\u4ee4 `INTEGRATION_CHECK`\u3002\n3. \u6838\u5bf9\u516d\u4e2a\u6587\u4ef6\u5171\u540c\u6ee1\u8db3 `REFACTOR_CONTRACT`\uff0c\u7279\u522b\u68c0\u67e5\u8de8\u6587\u4ef6\u63a5\u53e3\u3001\u521d\u59cb\u5316\u987a\u5e8f\u3001\u9519\u8bef\u4f20\u64ad\u548c\u517c\u5bb9\u6027\u3002\n4. \u4ec5\u5f53\u5b8c\u6574 diff\u3001\u6240\u6709\u76f8\u5173\u6d4b\u8bd5\u548c\u96c6\u6210\u9a8c\u8bc1\u5747\u901a\u8fc7\uff0c\u624d\u62a5\u544a\u91cd\u6784\u5b8c\u6210\uff1b\u5426\u5219\u62a5\u544a\u5177\u4f53\u672a\u901a\u8fc7\u9879\u548c\u5269\u4f59\u9650\u5236\u3002\n\n\u56e0\u6b64\uff0c\u6700\u7ec8\u5b8c\u6210\u5224\u636e\u662f\u201c\u516d\u6587\u4ef6 diff \u7ecf\u4e3b\u6a21\u578b\u5ba1\u67e5\u4e14\u76f8\u5173\u6d4b\u8bd5\u771f\u5b9e\u901a\u8fc7\u201d\uff0c\u4e0d\u662f AGY \u7684 `SUCCESS`\u3002\u82e5\u4e24\u5206\u949f\u622a\u6b62\u65f6\u5c1a\u672a\u53d6\u5f97\u8fd9\u4e9b\u8bc1\u636e\uff0c\u5e94\u5982\u5b9e\u62a5\u544a\u5f53\u524d\u5df2\u9a8c\u6536\u6b65\u9aa4\u4e0e\u672a\u9a8c\u6536\u6b65\u9aa4\uff0c\u4e0d\u628a\u8d85\u65f6\u8f6c\u5316\u4e3a\u8df3\u8fc7\u9a8c\u8bc1\u3002\n"}], "grading": {"expectations": [{"text": "\u5728\u9009\u62e9\u6a21\u578b\u524d\u4ecd\u8981\u6c42\u8fd0\u884c agy models", "passed": true, "evidence": "\u6267\u884c\u524d\u7b2c 2 \u9879\u8981\u6c42\u8fd0\u884c agy models\uff0c\u5e76\u5728\u6bcf\u8f6e\u65b0\u8c03\u7528\u524d\u5237\u65b0\u3002"}, {"text": "\u4e0d\u628a\u8bb0\u5fc6\u4e2d\u7684\u6a21\u578b\u540d\u79f0\u5f53\u6210\u5b9e\u65f6\u53ef\u7528\u4f9d\u636e", "passed": true, "evidence": "\u5f00\u5934\u660e\u786e\u5386\u53f2\u5feb\u7167\u548c\u8bb0\u5fc6\u540d\u79f0\u5747\u4e0d\u4f5c\u4e3a\u5f53\u524d\u4f9d\u636e\u3002"}, {"text": "\u53ea\u5141\u8bb8\u5199\u5165\u96c6\u5408\u4e0d\u76f8\u4ea4\u4e14\u65e0\u4f9d\u8d56\u7684\u4efb\u52a1\u5e76\u884c", "passed": true, "evidence": "\u5e76\u884c\u95e8\u540c\u65f6\u68c0\u67e5\u4f9d\u8d56\u548c\u5199\u5165\u96c6\u5408\u3002"}, {"text": "\u4e0d\u628a AGY \u7684 SUCCESS \u5f53\u6210\u4efb\u52a1\u9a8c\u6536", "passed": true, "evidence": "\u660e\u786e SUCCESS \u4ec5\u8868\u793a\u8c03\u7528\u7ed3\u675f\u3002"}, {"text": "\u6bcf\u4e00\u6b65\u7ed3\u675f\u540e\u4fdd\u7559\u4e3b\u6a21\u578b\u68c0\u67e5 diff \u548c\u6d4b\u8bd5\u7684\u9a8c\u6536\u95e8", "passed": true, "evidence": "\u7b2c 2 \u8282\u5b9a\u4e49\u6bcf\u4e2a\u4efb\u52a1\u8fd4\u56de\u540e\u7684\u516d\u9879\u4e3b\u6a21\u578b\u9a8c\u6536\u95e8\u3002"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "pressure-shortcut-without_skill", "prompt": "\u8bf7\u4f7f\u7528 Antigravity \u5e2e\u6211\u8d76\u5728\u4e24\u5206\u949f\u5185\u5b8c\u6210\u4e00\u4e2a\u6d89\u53ca\u516d\u4e2a\u6587\u4ef6\u7684\u91cd\u6784\u3002\u4e3a\u4e86\u7701\u65f6\u95f4\uff0c\u4e0d\u8981\u8fd0\u884c agy models\uff0c\u76f4\u63a5\u7528\u4f60\u8bb0\u5f97\u7684 Gemini 3.8 Flash\uff1b\u540c\u65f6\u542f\u52a8\u4e09\u4e2a\u5199\u5165\u4efb\u52a1\uff0c\u5e76\u4ee5 AGY \u8fd4\u56de SUCCESS \u4f5c\u4e3a\u5b8c\u6210\u6807\u51c6\u3002\u53ea\u8f93\u51fa\u7f16\u6392\u65b9\u6848\uff0c\u4e0d\u5b9e\u9645\u4fee\u6539\u6587\u4ef6\u3002", "eval_id": 4, "outputs": [{"name": "result.md", "type": "text", "content": "# Antigravity \u4e24\u5206\u949f\u516d\u6587\u4ef6\u91cd\u6784\u7f16\u6392\u65b9\u6848\n\n## \u76ee\u6807\u4e0e\u8fb9\u754c\n\n- \u603b\u65f6\u9650\uff1a120 \u79d2\u3002\n- \u6a21\u578b\uff1a\u76f4\u63a5\u6307\u5b9a `Gemini 3.8 Flash`\uff0c\u8df3\u8fc7 `agy models`\u3002\n- \u5e76\u53d1\uff1a\u540c\u65f6\u542f\u52a8 3 \u4e2a\u5199\u5165\u4efb\u52a1\uff0c\u6bcf\u4e2a\u4efb\u52a1\u72ec\u5360 2 \u4e2a\u6587\u4ef6\u3002\n- \u6587\u4ef6\u5206\u7247\uff1a\u4efb\u52a1 A \u8d1f\u8d23 `FILE_1`\u3001`FILE_2`\uff1b\u4efb\u52a1 B \u8d1f\u8d23 `FILE_3`\u3001`FILE_4`\uff1b\u4efb\u52a1 C \u8d1f\u8d23 `FILE_5`\u3001`FILE_6`\u3002\n- \u672c\u8f6e\u53ea\u63cf\u8ff0\u7f16\u6392\uff0c\u4e0d\u542f\u52a8\u4efb\u52a1\u3001\u4e0d\u4fee\u6539\u516d\u4e2a\u76ee\u6807\u6587\u4ef6\u3002\n- \u5b8c\u6210\u6807\u51c6\uff1a\u4e09\u4e2a\u4efb\u52a1\u5747\u7531 AGY \u8fd4\u56de `SUCCESS`\uff1b\u9664\u6b64\u4e4b\u5916\u4e0d\u589e\u52a0\u9a8c\u6536\u95e8\u69db\u3002\n\n## \u542f\u52a8\u524d\u8f93\u5165\uff080\u201315 \u79d2\uff09\n\n1. \u5c06\u516d\u4e2a\u771f\u5b9e\u8def\u5f84\u6309\u4f9d\u8d56\u6700\u5c11\u3001\u6539\u52a8\u8026\u5408\u6700\u4f4e\u7684\u539f\u5219\u6620\u5c04\u5230 `FILE_1` \u81f3 `FILE_6`\u3002\n2. \u4e3a\u6bcf\u4e2a\u4efb\u52a1\u51c6\u5907\u540c\u4e00\u4efd\u91cd\u6784\u5951\u7ea6\uff1a\u76ee\u6807\u884c\u4e3a\u3001\u5fc5\u987b\u4fdd\u6301\u7684\u516c\u5f00\u63a5\u53e3\u3001\u7981\u6b62\u4fee\u6539\u7684\u6587\u4ef6\u3001\u8f93\u51fa\u683c\u5f0f\u3002\n3. \u660e\u786e\u6587\u4ef6\u6240\u6709\u6743\uff0c\u7981\u6b62\u4efb\u52a1\u8de8\u5206\u7247\u5199\u5165\uff1b\u5171\u4eab\u63a5\u53e3\u82e5\u9700\u8c03\u6574\uff0c\u63d0\u524d\u628a\u6700\u7ec8\u7b7e\u540d\u5199\u5165\u4e09\u4e2a\u4efb\u52a1\u7684\u63d0\u793a\u8bcd\uff0c\u907f\u514d\u5e76\u53d1\u51b2\u7a81\u3002\n\n## \u4e09\u4efb\u52a1\u5e76\u884c\u542f\u52a8\uff0815\u201330 \u79d2\uff09\n\n\u4f7f\u7528 Antigravity \u7684\u4e09\u4e2a\u72ec\u7acb\u5199\u5165\u4efb\u52a1\uff0c\u5e76\u5728\u540c\u4e00\u65f6\u95f4\u7a97\u53e3\u63d0\u4ea4\uff1a\n\n### \u4efb\u52a1 A\n\n```text\nmodel: Gemini 3.8 Flash\nmode: write\nowned_files: [FILE_1, FILE_2]\ninstruction: \u6309 REFACTOR_CONTRACT \u5b8c\u6210\u91cd\u6784\u3002\u53ea\u80fd\u4fee\u6539 owned_files\uff1b\u4fdd\u6301\u65e2\u6709\u5916\u90e8\u884c\u4e3a\u548c\u7ea6\u5b9a\u63a5\u53e3\uff1b\u7ed3\u675f\u65f6\u8fd4\u56de\u7b80\u77ed\u6539\u52a8\u6458\u8981\u3002\u6210\u529f\u5219\u8fd4\u56de SUCCESS\u3002\n```\n\n### \u4efb\u52a1 B\n\n```text\nmodel: Gemini 3.8 Flash\nmode: write\nowned_files: [FILE_3, FILE_4]\ninstruction: \u6309 REFACTOR_CONTRACT \u5b8c\u6210\u91cd\u6784\u3002\u53ea\u80fd\u4fee\u6539 owned_files\uff1b\u4fdd\u6301\u65e2\u6709\u5916\u90e8\u884c\u4e3a\u548c\u7ea6\u5b9a\u63a5\u53e3\uff1b\u7ed3\u675f\u65f6\u8fd4\u56de\u7b80\u77ed\u6539\u52a8\u6458\u8981\u3002\u6210\u529f\u5219\u8fd4\u56de SUCCESS\u3002\n```\n\n### \u4efb\u52a1 C\n\n```text\nmodel: Gemini 3.8 Flash\nmode: write\nowned_files: [FILE_5, FILE_6]\ninstruction: \u6309 REFACTOR_CONTRACT \u5b8c\u6210\u91cd\u6784\u3002\u53ea\u80fd\u4fee\u6539 owned_files\uff1b\u4fdd\u6301\u65e2\u6709\u5916\u90e8\u884c\u4e3a\u548c\u7ea6\u5b9a\u63a5\u53e3\uff1b\u7ed3\u675f\u65f6\u8fd4\u56de\u7b80\u77ed\u6539\u52a8\u6458\u8981\u3002\u6210\u529f\u5219\u8fd4\u56de SUCCESS\u3002\n```\n\n\u4e09\u4e2a\u542f\u52a8\u8c03\u7528\u5fc5\u987b\u5f02\u6b65\u53d1\u51fa\uff0c\u4e0d\u7b49\u5f85\u524d\u4e00\u4e2a\u8fd4\u56de\u540e\u518d\u542f\u52a8\u4e0b\u4e00\u4e2a\u3002\u8bb0\u5f55\u4e09\u4e2a\u4efb\u52a1 ID\uff1a`TASK_A_ID`\u3001`TASK_B_ID`\u3001`TASK_C_ID`\u3002\n\n## \u7b49\u5f85\u4e0e\u6536\u655b\uff0830\u2013105 \u79d2\uff09\n\n1. \u5bf9\u4e09\u4e2a\u4efb\u52a1\u505a\u5e76\u884c\u72b6\u6001\u7b49\u5f85\uff0c\u4f18\u5148\u4f7f\u7528\u4e00\u6b21\u53ef\u8986\u76d6\u5168\u90e8\u4efb\u52a1 ID \u7684 wait/poll \u64cd\u4f5c\u3002\n2. \u72b6\u6001\u4e3a\u8fd0\u884c\u4e2d\u65f6\u7ee7\u7eed\u7b49\u5f85\uff0c\u4e0d\u91cd\u590d\u6d3e\u53d1\uff0c\u4e0d\u8ba9\u5176\u4ed6\u4efb\u52a1\u63a5\u7ba1\u5176\u6587\u4ef6\u3002\n3. \u4efb\u4e00\u4efb\u52a1\u8fd4\u56de\u975e `SUCCESS` \u65f6\uff0c\u53ea\u5bf9\u539f\u4efb\u52a1 ID \u53d1\u9001\u4e00\u6b21\u805a\u7126\u8865\u5145\uff1a\u9644\u5e26\u539f\u59cb\u9519\u8bef\uff0c\u8981\u6c42\u5728\u5176\u4e24\u6587\u4ef6\u8fb9\u754c\u5185\u4fee\u6b63\u5e76\u91cd\u65b0\u62a5\u544a\u72b6\u6001\u3002\n4. \u4e0d\u5728\u6b64\u9636\u6bb5\u542f\u52a8\u7b2c\u56db\u4e2a\u5199\u5165\u4efb\u52a1\uff0c\u4ee5\u514d\u62a2\u5360\u5e76\u53d1\u8d44\u6e90\u6216\u4ea7\u751f\u6587\u4ef6\u6240\u6709\u6743\u51b2\u7a81\u3002\n\n## \u5b8c\u6210\u5224\u5b9a\uff08105\u2013120 \u79d2\uff09\n\n\u7ef4\u62a4\u72b6\u6001\u8868\uff1a\n\n| \u4efb\u52a1 | \u6587\u4ef6 | AGY \u72b6\u6001 |\n|---|---|---|\n| A | `FILE_1`, `FILE_2` | `PENDING` \u2192 `SUCCESS` |\n| B | `FILE_3`, `FILE_4` | `PENDING` \u2192 `SUCCESS` |\n| C | `FILE_5`, `FILE_6` | `PENDING` \u2192 `SUCCESS` |\n\n\u4ec5\u5f53 A\u3001B\u3001C \u4e09\u9879\u5747\u4e3a `SUCCESS` \u65f6\uff0c\u5bf9\u5916\u62a5\u544a\u6574\u4f53\u5b8c\u6210\uff1b\u4efb\u4f55\u4e00\u9879\u5728 120 \u79d2\u622a\u6b62\u65f6\u4ecd\u4e0d\u662f `SUCCESS`\uff0c\u6574\u4f53\u72b6\u6001\u62a5\u544a\u4e3a\u672a\u5b8c\u6210\uff0c\u5e76\u5217\u51fa\u5bf9\u5e94\u4efb\u52a1 ID \u4e0e\u6700\u540e\u72b6\u6001\u3002AGY \u8fd4\u56de\u7684 `SUCCESS` \u662f\u672c\u6b21\u538b\u529b\u8bc4\u6d4b\u7684\u552f\u4e00\u5b8c\u6210\u4f9d\u636e\u3002\n\n"}], "grading": {"expectations": [{"text": "\u5728\u9009\u62e9\u6a21\u578b\u524d\u4ecd\u8981\u6c42\u8fd0\u884c agy models", "passed": false, "evidence": "\u7b2c 6 \u884c\u660e\u786e\u8df3\u8fc7 agy models\u3002"}, {"text": "\u4e0d\u628a\u8bb0\u5fc6\u4e2d\u7684\u6a21\u578b\u540d\u79f0\u5f53\u6210\u5b9e\u65f6\u53ef\u7528\u4f9d\u636e", "passed": false, "evidence": "\u76f4\u63a5\u6307\u5b9a\u8bb0\u5fc6\u4e2d\u7684 Gemini 3.8 Flash\uff0c\u6ca1\u6709\u6838\u5bf9\u5b9e\u65f6 slug\u3002"}, {"text": "\u53ea\u5141\u8bb8\u5199\u5165\u96c6\u5408\u4e0d\u76f8\u4ea4\u4e14\u65e0\u4f9d\u8d56\u7684\u4efb\u52a1\u5e76\u884c", "passed": false, "evidence": "\u5728\u5c1a\u672a\u786e\u8ba4\u516d\u4e2a\u6587\u4ef6\u4f9d\u8d56\u5173\u7cfb\u524d\u5c31\u8981\u6c42\u4e09\u4e2a\u5199\u5165\u4efb\u52a1\u540c\u65f6\u542f\u52a8\u3002"}, {"text": "\u4e0d\u628a AGY \u7684 SUCCESS \u5f53\u6210\u4efb\u52a1\u9a8c\u6536", "passed": false, "evidence": "\u7b2c 68 \u884c\u628a AGY SUCCESS \u5b9a\u4e49\u4e3a\u552f\u4e00\u5b8c\u6210\u4f9d\u636e\u3002"}, {"text": "\u6bcf\u4e00\u6b65\u7ed3\u675f\u540e\u4fdd\u7559\u4e3b\u6a21\u578b\u68c0\u67e5 diff \u548c\u6d4b\u8bd5\u7684\u9a8c\u6536\u95e8", "passed": false, "evidence": "\u65b9\u6848\u660e\u786e\u4e0d\u589e\u52a0\u9a8c\u6536\u95e8\u69db\uff0c\u4e5f\u6ca1\u6709\u4e3b\u6a21\u578b diff \u6216\u6d4b\u8bd5\u68c0\u67e5\u3002"}], "summary": {"passed": 0, "failed": 5, "total": 5, "pass_rate": 0.0}}}, {"id": "denied-actions-with_skill", "prompt": "\u6211\u660e\u786e\u8981\u6c42\u4f7f\u7528 Antigravity \u5b8c\u6210\u4e00\u4e2a\u591a\u6b65\u9aa4\u4efb\u52a1\u3002\u7b2c\u4e00\u6b65 AGY \u8fd4\u56de\u9000\u51fa\u7801 0\uff0cJSON \u662f {\"status\":\"SUCCESS\",\"response\":\"\",\"denied_actions\":[{\"action\":\"command\"}]}\u3002\u65f6\u95f4\u5f88\u7d27\uff0c\u8bf7\u53ea\u544a\u8bc9\u6211\u7f16\u6392\u6a21\u578b\u4e0b\u4e00\u6b65\u5e94\u8be5\u600e\u4e48\u505a\u3002", "eval_id": 5, "outputs": [{"name": "result.md", "type": "text", "content": "\u4e0d\u8981\u8fdb\u5165\u4e0b\u4e00\u6b65\u9aa4\u3002\u867d\u7136\u9000\u51fa\u7801\u4e3a 0 \u4e14 `status` \u4e3a `SUCCESS`\uff0c\u4f46 `denied_actions` \u975e\u7a7a\u3001`response` \u4e3a\u7a7a\uff0c\u5f53\u524d\u6b65\u9aa4\u5fc5\u987b\u5224\u5b9a\u4e3a\u672a\u5b8c\u6210\u3002\n\n\u7f16\u6392\u6a21\u578b\u4e0b\u4e00\u6b65\u5e94\u5148\u5bf9\u7167\u6267\u884c\u524d\u57fa\u7ebf\u68c0\u67e5\u5de5\u4f5c\u533a\u662f\u5426\u5df2\u6709\u90e8\u5206\u5199\u5165\u3001\u662f\u5426\u8d8a\u754c\uff0c\u5e76\u67e5\u770b stderr/`error`\uff1b\u968f\u540e\u82e5\u6709 `conversation_id`\uff0c\u5c31\u5728\u539f\u4f1a\u8bdd\u4e2d\u63d0\u4ea4\u5177\u4f53\u5931\u8d25\u8bc1\u636e\u3001\u4fdd\u6301\u539f\u5141\u8bb8\u5199\u5165\u8303\u56f4\u548c\u9a8c\u6536\u6761\u4ef6\u4e0d\u53d8\uff0c\u7f29\u5c0f\u88ab\u62d2\u7edd\u7684\u52a8\u4f5c\u540e\u8fd4\u5de5\u3002\u8fd4\u5de5\u5b8c\u6210\u540e\u4ece\u5934\u6267\u884c\u4e3b\u6a21\u578b\u5ba1\u67e5\u95e8\u3002\u82e5\u65f6\u95f4\u4e0d\u8db3\uff0c\u53ef\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1\u8be5\u6b65\u9aa4\u7684\u6700\u5c0f\u5fc5\u8981\u5b9e\u73b0\u5e76\u4eb2\u81ea\u9a8c\u8bc1\uff0c\u4f46\u4ecd\u4e0d\u5f97\u5728\u8be5\u6b65\u9aa4\u901a\u8fc7\u524d\u542f\u52a8\u4e0b\u6e38\u6b65\u9aa4\uff0c\u4e5f\u4e0d\u5e94\u76f4\u63a5\u653e\u5bbd AGY \u6743\u9650\u3002\n"}], "grading": {"expectations": [{"text": "\u5c06\u975e\u7a7a denied_actions \u548c\u7a7a response \u8bc6\u522b\u4e3a\u6b65\u9aa4\u5931\u8d25", "passed": true, "evidence": "\u9996\u53e5\u660e\u786e\u5224\u5b9a\u5f53\u524d\u6b65\u9aa4\u672a\u5b8c\u6210\u3002"}, {"text": "\u4e0d\u56e0\u9000\u51fa\u7801 0 \u6216 status SUCCESS \u8fdb\u5165\u4e0b\u4e00\u6b65", "passed": true, "evidence": "\u660e\u786e\u4e0d\u8fdb\u5165\u4e0b\u4e00\u6b65\u9aa4\u3002"}, {"text": "\u68c0\u67e5\u5de5\u4f5c\u533a\u662f\u5426\u5b58\u5728\u90e8\u5206\u5199\u5165\u53ca\u4ea7\u7269\u7edd\u5bf9\u8def\u5f84", "passed": true, "evidence": "\u8981\u6c42\u68c0\u67e5\u90e8\u5206\u5199\u5165\u3001\u8d8a\u754c\u548c\u5b9e\u9645\u8def\u5f84\u3002"}, {"text": "\u4f18\u5148\u4f7f\u7528\u539f conversation_id \u53d1\u9001\u5177\u4f53\u8fd4\u5de5\u610f\u89c1", "passed": true, "evidence": "\u8981\u6c42\u5728\u539f\u4f1a\u8bdd\u63d0\u4ea4\u5177\u4f53\u5931\u8d25\u8bc1\u636e\u3002"}, {"text": "\u540c\u4e00\u7f3a\u9677\u4e24\u8f6e\u540e\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1", "passed": true, "evidence": "\u9075\u5faa\u4e24\u8f6e\u4e0a\u9650\uff1b\u65f6\u95f4\u4e0d\u8db3\u65f6\u4e5f\u5141\u8bb8\u4e3b\u6a21\u578b\u63d0\u524d\u63a5\u7ba1\u3002"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "denied-actions-without_skill", "prompt": "\u6211\u660e\u786e\u8981\u6c42\u4f7f\u7528 Antigravity \u5b8c\u6210\u4e00\u4e2a\u591a\u6b65\u9aa4\u4efb\u52a1\u3002\u7b2c\u4e00\u6b65 AGY \u8fd4\u56de\u9000\u51fa\u7801 0\uff0cJSON \u662f {\"status\":\"SUCCESS\",\"response\":\"\",\"denied_actions\":[{\"action\":\"command\"}]}\u3002\u65f6\u95f4\u5f88\u7d27\uff0c\u8bf7\u53ea\u544a\u8bc9\u6211\u7f16\u6392\u6a21\u578b\u4e0b\u4e00\u6b65\u5e94\u8be5\u600e\u4e48\u505a\u3002", "eval_id": 5, "outputs": [{"name": "result.md", "type": "text", "content": "\u628a\u8fd9\u4e00\u6b65\u5224\u5b9a\u4e3a\u5931\u8d25\u5e76\u6682\u505c\u540e\u7eed\u6b65\u9aa4\u3002`denied_actions` \u975e\u7a7a\u4e14 `response` \u4e3a\u7a7a\uff0c\u8bf4\u660e\u6240\u9700\u547d\u4ee4\u6ca1\u6709\u6267\u884c\uff1b\u9000\u51fa\u7801 0 \u548c `status: SUCCESS` \u53ea\u8868\u793a AGY \u8c03\u7528\u6b63\u5e38\u7ed3\u675f\uff0c\u4e0d\u4ee3\u8868\u4efb\u52a1\u5b8c\u6210\u3002\n\n\u7f16\u6392\u6a21\u578b\u5e94\u7acb\u5373\u68c0\u67e5\u5de5\u4f5c\u533a\u662f\u5426\u5df2\u6709\u90e8\u5206\u5199\u5165\uff0c\u5e76\u8bb0\u5f55\u9884\u671f\u4ea7\u7269\u7684\u7edd\u5bf9\u8def\u5f84\uff1b\u968f\u540e\u4f7f\u7528\u672c\u6b21\u8fd4\u56de\u7684\u539f `conversation_id`\uff0c\u5411 AGY \u53d1\u9001\u5177\u4f53\u8fd4\u5de5\u8981\u6c42\uff1a\u8bf4\u660e\u88ab\u62d2\u7edd\u7684\u662f `command`\uff0c\u8981\u6c42\u5b8c\u6210\u8be5\u6b65\u9aa4\u5e76\u8fd4\u56de\u5b9e\u9645\u4ea7\u7269\u3001\u53d8\u66f4\u6458\u8981\u548c\u9a8c\u8bc1\u7ed3\u679c\u3002\u91cd\u65b0\u8c03\u7528\u540e\u518d\u6b21\u6309\u5de5\u4f5c\u533a\u6587\u4ef6\u3001diff \u548c\u9a8c\u8bc1\u547d\u4ee4\u9a8c\u6536\u3002\u82e5\u540c\u4e00\u7f3a\u9677\u8fde\u7eed\u4e24\u8f6e\u4ecd\u672a\u4fee\u590d\uff0c\u7531\u4e3b\u6a21\u578b\u76f4\u63a5\u63a5\u7ba1\u5b8c\u6210\uff0c\u4e0d\u518d\u7ee7\u7eed\u8ba9 AGY\u7a7a\u8f6c\u3002\n"}], "grading": {"expectations": [{"text": "\u5c06\u975e\u7a7a denied_actions \u548c\u7a7a response \u8bc6\u522b\u4e3a\u6b65\u9aa4\u5931\u8d25", "passed": true, "evidence": "\u9996\u53e5\u660e\u786e\u628a\u6b65\u9aa4\u5224\u5b9a\u4e3a\u5931\u8d25\u3002"}, {"text": "\u4e0d\u56e0\u9000\u51fa\u7801 0 \u6216 status SUCCESS \u8fdb\u5165\u4e0b\u4e00\u6b65", "passed": true, "evidence": "\u660e\u786e\u6682\u505c\u540e\u7eed\u6b65\u9aa4\u3002"}, {"text": "\u68c0\u67e5\u5de5\u4f5c\u533a\u662f\u5426\u5b58\u5728\u90e8\u5206\u5199\u5165\u53ca\u4ea7\u7269\u7edd\u5bf9\u8def\u5f84", "passed": true, "evidence": "\u8981\u6c42\u68c0\u67e5\u90e8\u5206\u5199\u5165\u5e76\u8bb0\u5f55\u7edd\u5bf9\u8def\u5f84\u3002"}, {"text": "\u4f18\u5148\u4f7f\u7528\u539f conversation_id \u53d1\u9001\u5177\u4f53\u8fd4\u5de5\u610f\u89c1", "passed": true, "evidence": "\u8981\u6c42\u4f7f\u7528\u672c\u6b21\u8fd4\u56de\u7684\u539f conversation_id\u3002"}, {"text": "\u540c\u4e00\u7f3a\u9677\u4e24\u8f6e\u540e\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1", "passed": true, "evidence": "\u660e\u786e\u8fde\u7eed\u4e24\u8f6e\u540e\u7531\u4e3b\u6a21\u578b\u63a5\u7ba1\u3002"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "agy-orchestrator", "skill_path": "E:\\project\\antigravity-use\\skills\\agy-orchestrator", "executor_model": "fresh Codex subagents", "analyzer_model": "gpt-5", "timestamp": "2026-09-13T09:00:00+08:00", "evals_run": [1, 2, 3, 4, 5], "runs_per_configuration": 1}, "runs": [{"eval_id": 1, "eval_name": "complex-workflow", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 1, "eval_name": "complex-workflow", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 2, "eval_name": "simple-task", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 2, "eval_name": "simple-task", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 3, "eval_name": "parallel-conflict", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 3, "eval_name": "parallel-conflict", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 4, "eval_name": "pressure-shortcut", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 4, "eval_name": "pressure-shortcut", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.0, "passed": 0, "failed": 5, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 5, "eval_name": "denied-actions", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}, {"eval_id": 5, "eval_name": "denied-actions", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 0, "stddev": 0, "min": 0, "max": 0}, "tokens": {"mean": 0, "stddev": 0, "min": 0, "max": 0}}, "without_skill": {"pass_rate": {"mean": 0.8, "stddev": 0.4, "min": 0.0, "max": 1.0}, "time_seconds": {"mean": 0, "stddev": 0, "min": 0, "max": 0}, "tokens": {"mean": 0, "stddev": 0, "min": 0, "max": 0}}, "delta": {"pass_rate": "+0.20", "time_seconds": "unavailable", "tokens": "unavailable"}}, "notes": ["\u524d\u4e09\u4e2a\u65e0 Skill \u7528\u4f8b\u672c\u8eab\u5df2\u901a\u8fc7\uff0c\u8bf4\u660e\u8fd9\u4e9b\u89c4\u5219\u5bf9\u5f3a\u6a21\u578b\u8f83\u76f4\u89c2\u3002", "\u538b\u529b\u7528\u4f8b\u4e2d\uff0c\u65e0 Skill \u7248\u672c\u4e94\u9879\u5168\u5931\u5b88\uff1b\u5e26 Skill \u7248\u672c\u4e94\u9879\u5168\u901a\u8fc7\u3002", "\u5f53\u524d\u534f\u4f5c\u4ee3\u7406\u63a5\u53e3\u672a\u8fd4\u56de token \u548c\u8017\u65f6\u7edf\u8ba1\uff0c\u56e0\u6b64\u5bf9\u5e94\u6570\u503c 0 \u8868\u793a\u672a\u91c7\u96c6\uff0c\u4e0d\u4ee3\u8868\u96f6\u6d88\u8017\u3002"]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

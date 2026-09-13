@@ -1,0 +1,33 @@
+{
+  "metadata": {
+    "skill_name": "agy-orchestrator",
+    "skill_path": "E:\\project\\antigravity-use\\skills\\agy-orchestrator",
+    "executor_model": "fresh Codex subagents",
+    "analyzer_model": "gpt-5",
+    "timestamp": "2026-09-13T09:00:00+08:00",
+    "evals_run": [1, 2, 3, 4, 5],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {"eval_id": 1, "eval_name": "complex-workflow", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 1, "eval_name": "complex-workflow", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 2, "eval_name": "simple-task", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 2, "eval_name": "simple-task", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 3, "eval_name": "parallel-conflict", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 3, "eval_name": "parallel-conflict", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 4, "eval_name": "pressure-shortcut", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 4, "eval_name": "pressure-shortcut", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.0, "passed": 0, "failed": 5, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 5, "eval_name": "denied-actions", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 5, "eval_name": "denied-actions", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}
+  ],
+  "run_summary": {
+    "with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 0, "stddev": 0, "min": 0, "max": 0}, "tokens": {"mean": 0, "stddev": 0, "min": 0, "max": 0}},
+    "without_skill": {"pass_rate": {"mean": 0.8, "stddev": 0.4, "min": 0.0, "max": 1.0}, "time_seconds": {"mean": 0, "stddev": 0, "min": 0, "max": 0}, "tokens": {"mean": 0, "stddev": 0, "min": 0, "max": 0}},
+    "delta": {"pass_rate": "+0.20", "time_seconds": "unavailable", "tokens": "unavailable"}
+  },
+  "notes": [
+    "前三个无 Skill 用例本身已通过，说明这些规则对强模型较直观。",
+    "压力用例中，无 Skill 版本五项全失守；带 Skill 版本五项全通过。",
+    "当前协作代理接口未返回 token 和耗时统计，因此对应数值 0 表示未采集，不代表零消耗。"
+  ]
+}

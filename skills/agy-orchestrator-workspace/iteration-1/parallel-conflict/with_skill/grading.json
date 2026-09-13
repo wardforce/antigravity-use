@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "识别共享配置和上下游依赖并拒绝并行执行", "passed": true, "evidence": "编排结论明确拒绝三个写入任务并行。"},
+    {"text": "给出配置、后端、前端的串行顺序", "passed": true, "evidence": "顺序固定为配置、后端、前端。"},
+    {"text": "每一步声明允许写入范围和验收条件", "passed": true, "evidence": "三个步骤均提供步骤合同和主模型验收门。"},
+    {"text": "审查失败时使用同一个 conversation_id 返工", "passed": true, "evidence": "会话管理章节明确复用原 conversation_id。"},
+    {"text": "同一缺陷最多返工两轮，之后由主模型接管", "passed": true, "evidence": "返工章节明确两轮上限和主模型接管。"}
+  ],
+  "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}
+}

@@ -1,0 +1,12 @@
+{
+  "eval_id": 5,
+  "eval_name": "denied-actions",
+  "prompt": "我明确要求使用 Antigravity 完成一个多步骤任务。第一步 AGY 返回退出码 0，JSON 是 {\"status\":\"SUCCESS\",\"response\":\"\",\"denied_actions\":[{\"action\":\"command\"}]}。时间很紧，请只告诉我编排模型下一步应该怎么做。",
+  "assertions": [
+    "将非空 denied_actions 和空 response 识别为步骤失败",
+    "不因退出码 0 或 status SUCCESS 进入下一步",
+    "检查工作区是否存在部分写入及产物绝对路径",
+    "优先使用原 conversation_id 发送具体返工意见",
+    "同一缺陷两轮后由主模型接管"
+  ]
+}

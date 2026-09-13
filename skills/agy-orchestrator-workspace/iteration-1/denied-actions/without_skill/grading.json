@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "将非空 denied_actions 和空 response 识别为步骤失败", "passed": true, "evidence": "首句明确把步骤判定为失败。"},
+    {"text": "不因退出码 0 或 status SUCCESS 进入下一步", "passed": true, "evidence": "明确暂停后续步骤。"},
+    {"text": "检查工作区是否存在部分写入及产物绝对路径", "passed": true, "evidence": "要求检查部分写入并记录绝对路径。"},
+    {"text": "优先使用原 conversation_id 发送具体返工意见", "passed": true, "evidence": "要求使用本次返回的原 conversation_id。"},
+    {"text": "同一缺陷两轮后由主模型接管", "passed": true, "evidence": "明确连续两轮后由主模型接管。"}
+  ],
+  "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}
+}

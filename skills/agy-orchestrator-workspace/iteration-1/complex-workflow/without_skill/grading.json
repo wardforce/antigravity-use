@@ -1,0 +1,10 @@
+{
+  "expectations": [
+    {"text": "选择工作模型前明确运行 agy models 获取实时模型列表", "passed": true, "evidence": "第 2 节第 2 项明确先运行 agy models，并说明不依赖记忆中的模型名称。"},
+    {"text": "按数据库、后端、前端、端到端验证的依赖顺序串行执行", "passed": true, "evidence": "第 4 节按 A 到 D 明确给出数据库、后端、前端、端到端的串行阶段。"},
+    {"text": "每一步都包含主模型亲自检查 diff 和测试的验收门", "passed": true, "evidence": "四个阶段均有主 Codex 门禁，第 5 节还定义了固定审查门。"},
+    {"text": "明确保留用户已有未提交改动", "passed": true, "evidence": "第 2 节记录用户原有改动清单并要求全程保留。"},
+    {"text": "保存 conversation_id，以便审查失败后在同一 AGY 会话返工", "passed": true, "evidence": "第 3 节要求保存 conversation_id，第 6 节给出同会话返工命令。"}
+  ],
+  "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}
+}

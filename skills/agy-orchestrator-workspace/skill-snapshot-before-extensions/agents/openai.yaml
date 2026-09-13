@@ -1,0 +1,7 @@
+interface:
+  display_name: "AGY 编排器"
+  short_description: "由 Codex 主模型编排并逐步审查 Antigravity 长流程任务"
+  default_prompt: "使用 $agy-orchestrator 通过 AGY 执行这个多步骤任务，并由主模型逐步验收。"
+
+policy:
+  allow_implicit_invocation: true

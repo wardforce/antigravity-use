@@ -1,0 +1,25 @@
+{
+  "metadata": {
+    "skill_name": "agy-orchestrator",
+    "skill_path": "E:\\project\\antigravity-use\\skills\\agy-orchestrator",
+    "executor_model": "gpt-5.6-luna",
+    "analyzer_model": "gpt-5",
+    "timestamp": "2026-09-13T10:00:00+08:00",
+    "evals_run": [6],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {"eval_id": 6, "eval_name": "extensions-discovery", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 6, "failed": 0, "total": 6, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}},
+    {"eval_id": 6, "eval_name": "extensions-discovery", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.8333333333, "passed": 5, "failed": 1, "total": 6, "time_seconds": 0, "tokens": 0, "tool_calls": 0, "errors": 0}}
+  ],
+  "run_summary": {
+    "with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 0, "stddev": 0, "min": 0, "max": 0}, "tokens": {"mean": 0, "stddev": 0, "min": 0, "max": 0}},
+    "without_skill": {"pass_rate": {"mean": 0.8333333333, "stddev": 0.0, "min": 0.8333333333, "max": 0.8333333333}, "time_seconds": {"mean": 0, "stddev": 0, "min": 0, "max": 0}, "tokens": {"mean": 0, "stddev": 0, "min": 0, "max": 0}},
+    "delta": {"pass_rate": "+0.1667", "time_seconds": "unavailable", "tokens": "unavailable"}
+  },
+  "notes": [
+    "旧 Skill 和第一次更新均遗漏 Rules 的四种激活方式。",
+    "把激活方式提升到主 Skill 的执行前合同后，Luna 复测 6/6 通过。",
+    "协作代理接口未提供 token 和耗时统计，数值 0 表示未采集。"
+  ]
+}

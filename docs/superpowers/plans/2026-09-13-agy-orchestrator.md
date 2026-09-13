@@ -86,3 +86,21 @@
 - [x] **Step 3:** 验证 `num_turns` 增长、目标文件仍缺失及沙箱 scratch 路径偏移。
 - [x] **Step 4:** 对 Skill 运行最终校验、模型覆盖检查和 `git diff --check`。
 - [x] **Step 5:** 提交 Skill、测试定义和验证结果。
+
+### Task 5: 扩展能力发现
+
+**Files:**
+- Create: `skills/agy-orchestrator/references/agy-extensions.md`
+- Modify: `skills/agy-orchestrator/SKILL.md`
+- Modify: `skills/agy-orchestrator/references/orchestration-protocol.md`
+- Modify: `skills/agy-orchestrator/evals/evals.json`
+
+**Interfaces:**
+- Consumes: Google Antigravity 官方 MCP、Skills、Plugins、Hooks、Rules 文档。
+- Produces: 执行前扩展发现矩阵和最小权限复用规则。
+
+- [x] **Step 1:** 使用旧 Skill 快照运行 Luna 基线测试。
+- [x] **Step 2:** 写项目级/全局级路径矩阵和 Skills 全局地址差异。
+- [x] **Step 3:** 写 MCP、Plugins、Hooks、Rules 的检查与状态变更边界。
+- [x] **Step 4:** 使用 Luna 对更新后的 Skill 运行相同测试，并针对 Rules 激活方式补强后复测。
+- [x] **Step 5:** 运行 Skill、JSON、模型覆盖和 Git 校验并提交。

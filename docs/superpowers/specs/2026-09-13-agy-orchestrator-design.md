@@ -24,6 +24,8 @@ The skill will live at `skills/agy-orchestrator/` and contain:
   task routing, and runtime refresh rules.
 - `references/orchestration-protocol.md`: AGY command patterns, response
   contracts, review gates, revision handling, and failure recovery.
+- `references/agy-extensions.md`: project and global discovery, path
+  differences, and reuse boundaries for MCP, Skills, Plugins, Hooks, and Rules.
 
 No wrapper program is required for the initial version. The native CLI already
 provides the required model discovery, JSON envelope, streaming events, and

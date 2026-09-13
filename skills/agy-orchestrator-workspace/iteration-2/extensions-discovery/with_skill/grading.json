@@ -1,0 +1,11 @@
+{
+  "expectations": [
+    {"text": "MCP 路径为项目 .agents/mcp_config.json 与全局 ~/.gemini/config/mcp_config.json", "passed": true, "evidence": "路径矩阵准确列出项目和全局 MCP 文件。"},
+    {"text": "项目 Skills 入口为 .agents/skills，并区分通用全局 ~/.gemini/config/skills 与 CLI 全局 ~/.gemini/antigravity-cli/skills", "passed": true, "evidence": "路径矩阵准确列出三个入口及扁平 CLI Skill。"},
+    {"text": "区分通用插件位置 .agents/plugins 或 ~/.gemini/config/plugins 与 CLI 暂存 ~/.gemini/antigravity-cli/plugins", "passed": true, "evidence": "路径矩阵准确列出三个位置。"},
+    {"text": "列出 hooks.json 的项目和全局位置，并说明 Hook 可能改变工具执行结果或权限", "passed": true, "evidence": "路径与 Hook 副作用均已说明。"},
+    {"text": "列出项目 Rules .agents/rules 与全局 ~/.gemini/GEMINI.md，并说明激活方式", "passed": false, "evidence": "列出路径，但最终方案没有列出四种官方激活方式。"},
+    {"text": "只复用和检查现有扩展；安装、启停或修改配置需要用户明确要求", "passed": true, "evidence": "只读和状态变更边界完整。"}
+  ],
+  "summary": {"passed": 5, "failed": 1, "total": 6, "pass_rate": 0.8333333333}
+}

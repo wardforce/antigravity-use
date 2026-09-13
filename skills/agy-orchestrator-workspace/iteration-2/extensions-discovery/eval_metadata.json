@@ -1,0 +1,13 @@
+{
+  "eval_id": 6,
+  "eval_name": "extensions-discovery",
+  "prompt": "我明确要求使用 AGY 完成一个多步骤项目任务。执行前请说明主编排模型如何发现并复用项目级和全局级的 MCP、Skills、Plugins、Hooks、Rules；请精确列出 AGY CLI 与通用 Antigravity 的路径差异，并说明哪些配置只检查、哪些操作需要用户明确要求后才执行。只输出执行前方案，不修改配置。",
+  "assertions": [
+    "MCP 路径为项目 .agents/mcp_config.json 与全局 ~/.gemini/config/mcp_config.json",
+    "项目 Skills 入口为 .agents/skills，并区分通用全局 ~/.gemini/config/skills 与 CLI 全局 ~/.gemini/antigravity-cli/skills",
+    "区分通用插件位置 .agents/plugins 或 ~/.gemini/config/plugins 与 CLI 暂存 ~/.gemini/antigravity-cli/plugins",
+    "列出 hooks.json 的项目和全局位置，并说明 Hook 可能改变工具执行结果或权限",
+    "列出项目 Rules .agents/rules 与全局 ~/.gemini/GEMINI.md，并说明激活方式",
+    "只复用和检查现有扩展；安装、启停或修改配置需要用户明确要求"
+  ]
+}

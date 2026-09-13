@@ -20,6 +20,8 @@ Skill 放在 `skills/agy-orchestrator/`，包含：
 - `references/model-routing.md`：当前模型清单、模型任务分工和运行时刷新规则。
 - `references/orchestration-protocol.md`：AGY 命令模式、返回协议、审查门、返工和
   失败恢复规则。
+- `references/agy-extensions.md`：MCP、Skills、Plugins、Hooks、Rules 的项目级与全局级
+  发现、路径差异和复用边界。
 
 初始版本不需要额外的包装程序。原生 CLI 已提供模型发现、JSON 信封、流式事件和
 会话恢复能力。把判断保留在主模型中，也能避免脚本把“命令执行成功”误判成“任务

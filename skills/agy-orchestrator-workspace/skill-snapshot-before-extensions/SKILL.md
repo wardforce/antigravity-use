@@ -27,18 +27,12 @@ description: Use when the user explicitly asks Codex to use Antigravity or AGY, 
 1. 读取仓库指令，检查 `git status`、已有 diff、测试入口和目标文件。
 2. 保存用户原有改动的基线；后续检查时区分原改动与本次新增改动。
 3. 运行 `agy models` 获取实时模型 slug。每次调用都刷新，静态路由表只帮助选型。
-4. 检查项目已配置的 MCP、Skills、Plugins、Hooks 和 Rules，只把与当前步骤相关且已加载
-   的能力写入合同。对 Rule 记录 `Manual`、`Always On`、`Model Decision` 或 `Glob` 激活
-   方式；对 Hook 记录事件和权限影响。读取全局配置前确认访问范围，输出中隐藏密钥和
-   token。
-5. 将任务拆成顺序步骤。每一步写明目标、允许写入范围、输入契约和验收命令。
-6. 默认串行。只有步骤间没有数据或接口依赖，并且允许写入的文件集合完全不相交时，
+4. 将任务拆成顺序步骤。每一步写明目标、允许写入范围、输入契约和验收命令。
+5. 默认串行。只有步骤间没有数据或接口依赖，并且允许写入的文件集合完全不相交时，
    才可以并行。
 
 选择工作模型前必须阅读 [模型路由](references/model-routing.md)。准备调用、解析结果、
-审查或返工时必须阅读 [编排协议](references/orchestration-protocol.md)。任务需要 AGY 的
-外部工具、既有 Skill、插件、Hook 或规则时，必须阅读
-[AGY 扩展发现](references/agy-extensions.md)。
+审查或返工时必须阅读 [编排协议](references/orchestration-protocol.md)。
 
 ## 执行闭环
 
